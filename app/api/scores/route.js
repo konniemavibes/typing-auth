@@ -1,35 +1,28 @@
-// app/api/scores/route.js (or your route location)
-
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { PrismaClient } from '@prisma/client';
 
-export async function POST(req) {
+const prisma = new PrismaClient();
+
+export async function POST(request) {
   try {
-    const body = await req.json();
+    const body = await request.json();
+    const { name, wpm, accuracy, rawWpm, userId } = body;
 
-    // Validate the request body
-    if (!body.name || !body.wpm || body.accuracy === undefined) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    // Create a new score in the database
     const score = await prisma.score.create({
       data: {
-        name: body.name,
-        wpm: parseInt(body.wpm),
-        accuracy: parseFloat(body.accuracy),
-        rawWpm: body.rawWpm ? parseInt(body.rawWpm) : parseInt(body.wpm),
+        name,
+        wpm,
+        accuracy,
+        rawWpm,
+        userId: userId || null,
       },
     });
 
-    return NextResponse.json({ success: true, data: score });
+    return NextResponse.json(score);
   } catch (error) {
-    console.error('Error saving score:', error);
+    console.error('Score error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { error: 'Failed to save score' },
       { status: 500 }
     );
   }
@@ -37,19 +30,15 @@ export async function POST(req) {
 
 export async function GET() {
   try {
-    // Fetch the top 100 scores, sorted by WPM in descending order
     const scores = await prisma.score.findMany({
-      orderBy: {
-        wpm: 'desc',
-      },
+      orderBy: { wpm: 'desc' },
       take: 100,
     });
 
-    return NextResponse.json({ success: true, data: scores });
+    return NextResponse.json({ data: scores });
   } catch (error) {
-    console.error('Error fetching scores:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { error: 'Failed to fetch scores' },
       { status: 500 }
     );
   }
