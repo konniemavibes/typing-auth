@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { sentences } from "../constants/sentences";
 import { MobileKeyboard } from './MobileKeyboard';
+import NavBar from './Navbar';
 
 const StatPanel = ({ icon, value, label, unit = "", color, className = "" }) => (
   <div className={`
@@ -349,21 +350,33 @@ export default function ProfessionalTypingLab() {
     };
   }, []);
 
- const handleGoogleSignIn = () => {
-  setAuthProvider('google');
-  setIsAuthLoading(true);
-  
-  // Stack Auth hosted sign-in page
-  window.location.href = `https://app.stack-auth.com/handler/sign-in?project_id=${process.env.NEXT_PUBLIC_STACK_PROJECT_ID}&redirect_url=${encodeURIComponent(window.location.origin)}&provider=google`;
-};
+  const handleGoogleSignIn = () => {
+    setAuthProvider('google');
+    setIsAuthLoading(true);
+    
+    // Use Stack Auth's hosted sign-in page
+    const params = new URLSearchParams({
+      client_id: process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY,
+      redirect_url: window.location.origin,
+      provider: 'google',
+    });
+    
+    window.location.href = `https://app.stack-auth.com/handler/sign-in?${params.toString()}`;
+  };
 
-const handleGitHubSignIn = () => {
-  setAuthProvider('github');
-  setIsAuthLoading(true);
-  
-  // Stack Auth hosted sign-in page
-  window.location.href = `https://api.stack-auth.com/api/v1/auth/oauth/callback/github`;
-};
+  const handleGitHubSignIn = () => {
+    setAuthProvider('github');
+    setIsAuthLoading(true);
+    
+    // Use Stack Auth's hosted sign-in page
+    const params = new URLSearchParams({
+      client_id: process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY,
+      redirect_url: window.location.origin,
+      provider: 'github',
+    });
+    
+    window.location.href = `https://app.stack-auth.com/handler/sign-in?${params.toString()}`;
+  };
 
   const progressPercentage = (stats.time / stats.initialTime) * 100;
 
@@ -380,6 +393,7 @@ const handleGitHubSignIn = () => {
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'} transition-colors duration-300`}>
+      <NavBar />
       <AuthLoadingModal isVisible={isAuthLoading} provider={authProvider} />
       
       <div className="container mx-auto px-4 py-6 max-w-6xl">

@@ -12,6 +12,7 @@ import {
   ArrowRightOnRectangleIcon,
   ArrowLeftOnRectangleIcon,
   ChevronDownIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 import { MdMenuBook } from 'react-icons/md';
 import FuzzyText from '../components/FuzzyText';
@@ -174,11 +175,17 @@ export default function NavBar() {
               )}
             </div>
           ) : (
-            // LOGGED OUT - Show Sign In button
-            <button onClick={handleSignIn} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-medium transition-colors">
-              <ArrowLeftOnRectangleIcon className="w-5 h-5" />
-              <span className="hidden md:inline">Sign In</span>
-            </button>
+            // LOGGED OUT - Show Login and Signup buttons
+            <div className="flex items-center gap-2">
+              <Link href="/auth/login" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 font-medium transition-colors">
+                <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+                <span className="hidden md:inline">Login</span>
+              </Link>
+              <Link href="/auth/signup" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-medium transition-colors">
+                <UserPlusIcon className="w-5 h-5" />
+                <span className="hidden md:inline">Sign Up</span>
+              </Link>
+            </div>
           )}
         </div>
       </div>
