@@ -3,8 +3,8 @@
 ## ✅ Completed Setup
 
 ### 1. Database Configuration
-- ✅ `.env.local` created with Neon PostgreSQL credentials
-- ✅ Prisma schema updated with NextAuth tables
+- ✅ Prisma schema updated for MongoDB
+- ✅ MongoDB driver installed
 - ✅ NEXTAUTH_SECRET generated: `47ef47d0c882786e62e81f8a0555ef00510ff36f0376e77b6351afe360e64391`
 
 ### 2. NextAuth Configuration
@@ -15,11 +15,19 @@
 
 ## ⚠️ Next Steps (Manual Required)
 
-### Step 1: Activate Neon Database
-Your database might be sleeping (Neon free tier). Visit:
-- [Neon Console](https://console.neon.tech)
-- Wake up your project
-- Then run: `npx prisma migrate dev`
+### Step 1: Set Up MongoDB Atlas Database
+You've logged into MongoDB Atlas. Now:
+1. Create a new project (or use existing)
+2. Create a free cluster (M0 Sandbox)
+3. In your cluster, click "Connect"
+4. Choose "Connect your application"
+5. Copy the connection string
+6. Replace `<password>` with your database user password
+7. Update `.env.local` with:
+   ```
+   DATABASE_URL="mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/typing_auth?retryWrites=true&w=majority"
+   ```
+8. Then run: `npx prisma generate && npx prisma db push`
 
 ### Step 2: Set Up Google OAuth
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
@@ -60,7 +68,8 @@ NEXTAUTH_SECRET=47ef47d0c882786e62e81f8a0555ef00510ff36f0376e77b6351afe360e64391
 After completing above steps:
 ```bash
 npm install
-npx prisma migrate dev
+npx prisma generate
+npx prisma db push
 npm run dev
 ```
 
@@ -72,7 +81,7 @@ Visit: http://localhost:3000
 
 | Variable | Status | Notes |
 |----------|--------|-------|
-| DATABASE_URL | ✅ Set | Neon PostgreSQL |
+| DATABASE_URL | ⚠️ Needed | MongoDB Atlas connection string |
 | NEXTAUTH_SECRET | ✅ Set | Generated securely |
 | NEXTAUTH_URL | ✅ Set | localhost:3000 |
 | GOOGLE_CLIENT_ID | ⚠️ Needed | Get from Google Cloud |

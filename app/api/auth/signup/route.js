@@ -49,12 +49,6 @@ export async function POST(request) {
         password: hashedPassword,
         gender,
       },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        gender: true,
-      }
     });
 
     return NextResponse.json({ 
@@ -62,9 +56,10 @@ export async function POST(request) {
       user 
     });
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error('Signup error:', error.message);
+    console.error('Full error:', error);
     return NextResponse.json(
-      { error: 'Failed to create account' },
+      { error: 'Failed to create account', details: error.message },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSession } from "next-auth/react";
 import {
   ClockIcon,
   BoltIcon,
@@ -11,11 +12,36 @@ import {
 import { sentences } from "../constants/sentences";
 import { MobileKeyboard } from './MobileKeyboard';
 import NavBar from './Navbar';
+import { useTheme } from '../context/ThemeContext';
 
-const StatPanel = ({ icon, value, label, unit = "", color, className = "" }) => (
+// Animation themes for typing area
+const animationThemes = {
+  wave: {
+    name: "🌊 Wave",
+    className: "animate-wave",
+    description: "Flowing wave motion"
+  },
+  pulse: {
+    name: "💓 Pulse",
+    className: "animate-pulse-theme",
+    description: "Gentle pulsing rhythm"
+  },
+  fade: {
+    name: "✨ Fade",
+    className: "animate-fade",
+    description: "Subtle fading effect"
+  },
+  blur: {
+    name: "🌫️ Blur",
+    className: "animate-blur-focus",
+    description: "Focus blur effect"
+  }
+};
+
+const StatPanel = ({ icon, value, label, unit = "", color, className = "", theme = "dark" }) => (
   <div className={`
-    p-6 rounded-xl bg-slate-800/90 text-slate-200
-    transition-all duration-200 shadow-lg  
+    p-6 rounded-xl transition-all duration-200 shadow-lg
+    ${theme === 'dark' ? 'bg-slate-800/90 text-slate-200' : 'bg-slate-100 text-slate-900'}
     ${className}
   `}>
     <div className="flex items-center gap-3 mb-1">
@@ -24,7 +50,9 @@ const StatPanel = ({ icon, value, label, unit = "", color, className = "" }) => 
         {value}{unit}
       </span>
     </div>
-    <div className="text-slate-400 text-sm">{label}</div>
+    <div className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
+      {label}
+    </div>
   </div>
 );
 
@@ -106,7 +134,8 @@ const AuthLoadingModal = ({ isVisible, provider }) => {
 };
 
 export default function ProfessionalTypingLab() {
-  const [user, setUser] = useState(null);
+  const { theme } = useTheme();
+  const { data: session, status } = useSession();
   const [input, setInput] = useState("");
   const [sentence, setSentence] = useState("");
   const [gameState, setGameState] = useState('loading');
@@ -118,10 +147,11 @@ export default function ProfessionalTypingLab() {
   });
   const [isMobile, setIsMobile] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [theme, setTheme] = useState("dark");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [authProvider, setAuthProvider] = useState(null);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const [selectedAnimation, setSelectedAnimation] = useState('simple');
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);
@@ -134,8 +164,8 @@ export default function ProfessionalTypingLab() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
-      
+      audioRef.current = new Audio('/beep-01a.mp3');
+
       // Check for authenticated user
       const authUser = localStorage.getItem('authUser');
       if (authUser) {
@@ -143,6 +173,24 @@ export default function ProfessionalTypingLab() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (session) {
+        try {
+          const userRes = await fetch('/api/user');
+          const userResponse = await userRes.json();
+          if (userResponse.data) {
+            setUserData(userResponse.data);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [session]);
 
   useEffect(() => {
     setGameState('playing');
@@ -210,33 +258,57 @@ export default function ProfessionalTypingLab() {
   }, []);
 
   const saveScore = useCallback(async (finalWpm, finalAccuracy) => {
-    if (!user) {
+    console.log('saveScore called with session:', !!session, 'userData:', !!userData);
+
+    if (!session) {
+      console.log('No session, showing sign in prompt');
       setShowSignInPrompt(true);
       return;
     }
 
+    if (!userData) {
+      console.log('No userData, showing sign in prompt');
+      setShowSignInPrompt(true);
+      return;
+    }
+
+    console.log('Saving score with userData:', userData);
+    console.log('userId being used:', userData.id);
+    console.log('userData.id type:', typeof userData.id);
+
     try {
+      const payload = {
+        name: session.user.name,
+        wpm: finalWpm,
+        accuracy: finalAccuracy,
+        rawWpm: finalWpm,
+        userId: userData.id,
+      };
+
+      console.log('Sending payload:', payload);
+
       const response = await fetch('/api/scores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: user.name,
-          wpm: finalWpm,
-          accuracy: finalAccuracy,
-          rawWpm: finalWpm,
-          userId: user.id,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log('Response status:', response.status);
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Score submission failed');
+        console.error('Response not ok, throwing error');
+        throw new Error(responseData.error || 'Score submission failed');
       }
+
+      console.log('Score saved successfully');
       setSubmitError('');
     } catch (error) {
+      console.error('Save score error:', error);
       setSubmitError(error.message);
     }
-  }, [user]);
+  }, [session, userData]);
 
   const endGame = useCallback(async () => {
     if (hasSubmittedRef.current) return;
@@ -350,34 +422,6 @@ export default function ProfessionalTypingLab() {
     };
   }, []);
 
-  const handleGoogleSignIn = () => {
-    setAuthProvider('google');
-    setIsAuthLoading(true);
-    
-    // Use Stack Auth's hosted sign-in page
-    const params = new URLSearchParams({
-      client_id: process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY,
-      redirect_url: window.location.origin,
-      provider: 'google',
-    });
-    
-    window.location.href = `https://app.stack-auth.com/handler/sign-in?${params.toString()}`;
-  };
-
-  const handleGitHubSignIn = () => {
-    setAuthProvider('github');
-    setIsAuthLoading(true);
-    
-    // Use Stack Auth's hosted sign-in page
-    const params = new URLSearchParams({
-      client_id: process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY,
-      redirect_url: window.location.origin,
-      provider: 'github',
-    });
-    
-    window.location.href = `https://app.stack-auth.com/handler/sign-in?${params.toString()}`;
-  };
-
   const progressPercentage = (stats.time / stats.initialTime) * 100;
 
   if (gameState === 'loading') {
@@ -392,63 +436,38 @@ export default function ProfessionalTypingLab() {
   }
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'} transition-colors duration-300`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'} transition-colors duration-300`}>
       <NavBar />
       <AuthLoadingModal isVisible={isAuthLoading} provider={authProvider} />
       
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* User Info Bar */}
-        {user && (
+        {session && (
           <div className="flex justify-end items-center gap-4 mb-6">
-            <div className="flex items-center gap-3 bg-slate-800/90 px-4 py-2 rounded-lg">
-              {user.image && (
-                <img 
-                  src={user.image} 
-                  alt={user.name}
+            <div className={`flex items-center gap-3 ${theme === 'dark' ? 'bg-slate-800/90' : 'bg-slate-200'} px-4 py-2 rounded-lg`}>
+              {(userData?.image || session.user.image) && (
+                <img
+                  src={userData?.image || session.user.image}
+                  alt={session.user.name}
                   width={32}
                   height={32}
                   className="rounded-full"
                 />
               )}
-              <span className="text-slate-200">{user.name || user.email}</span>
+              <span className={theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}>{session.user.name || session.user.email}</span>
             </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('authUser');
-                setUser(null);
-              }}
-              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg transition-colors"
-            >
-              <ArrowRightOnRectangleIcon className="w-5 h-5" />
-              Sign Out
-            </button>
           </div>
         )}
 
         {/* Sign In Prompt for Non-Authenticated Users */}
-        {!user && (
-          <div className="mb-6 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+        {(!session || status === 'unauthenticated') && (
+          <div className={`mb-6 ${theme === 'dark' ? 'bg-yellow-900/20 border-yellow-500/30' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4`}>
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
-                <UserPlusIcon className="w-6 h-6 text-yellow-500" />
+                <UserPlusIcon className={`w-6 h-6 ${theme === 'dark' ? 'text-yellow-500' : 'text-yellow-600'}`} />
                 <div>
-                  <p className="text-slate-200 font-medium">Sign in to save your scores</p>
-                  <p className="text-slate-400 text-sm">Your results won't be saved to the leaderboard without signing in</p>
+                  <p className={`${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'} font-medium`}>Please sign in to save your scores</p>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleGoogleSignIn}
-                  className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-800 rounded-lg text-sm font-medium transition-colors"
-                >
-                  Sign in with Google
-                </button>
-                <button
-                  onClick={handleGitHubSignIn}
-                  className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  Sign in with GitHub
-                </button>
               </div>
             </div>
           </div>
@@ -456,19 +475,40 @@ export default function ProfessionalTypingLab() {
 
         {gameState === "playing" && (
           <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
-            <div className="flex justify-end mb-2">
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Animation:</span>
+                <div className="flex gap-1">
+                  {Object.entries(animationThemes).map(([key, anim]) => (
+                    <button
+                      key={key}
+                      onClick={() => setSelectedAnimation(selectedAnimation === key ? '' : key)}
+                      className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                        selectedAnimation === key
+                          ? 'bg-emerald-500 text-white shadow-lg'
+                          : theme === 'dark'
+                            ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                            : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
+                      }`}
+                      title={anim.description}
+                    >
+                      {anim.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <button
                 onClick={startGame}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-sm transition-all"
+                className={`flex items-center gap-2 px-4 py-2 ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-slate-300 hover:bg-slate-400 text-slate-800'} rounded-lg text-sm transition-all`}
                 title="Restart (Ctrl+Space)"
               >
                 <ArrowPathIcon className="w-4 h-4" />
                 Restart
-                <span className="ml-1 px-2 py-0.5 bg-slate-600 rounded text-xs">Ctrl+Space</span>
+                <span className={`ml-1 px-2 py-0.5 ${theme === 'dark' ? 'bg-slate-600' : 'bg-slate-400'} rounded text-xs`}>Ctrl+Space</span>
               </button>
             </div>
 
-            <div className="w-full bg-slate-700/50 rounded-full h-2.5 mb-4">
+            <div className={`w-full ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-300/50'} rounded-full h-2.5 mb-4`}>
               <div 
                 className="bg-emerald-500 h-2.5 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${progressPercentage}%` }}
@@ -476,37 +516,100 @@ export default function ProfessionalTypingLab() {
             </div>
 
             <div className={`
-              relative text-xl md:text-2xl lg:text-3xl leading-relaxed 
-              p-6 md:p-8 lg:p-10 ${theme === 'dark' ? 'bg-slate-800/80' : 'bg-white/90'} backdrop-blur-lg rounded-xl 
-              transition-all duration-300 border ${theme === 'dark' ? 'border-slate-700/30' : 'border-slate-200/70'}
+              relative text-2xl md:text-3xl lg:text-4xl leading-relaxed
+              p-6 md:p-8 lg:p-10 ${theme === 'dark' ? 'bg-slate-800/80 border-slate-700/30' : 'bg-white border-slate-300'} backdrop-blur-lg rounded-xl
+              transition-all duration-300 border
               shadow-lg ${stats.time <= 0 ? 'opacity-75' : ''}
               ${isMobile ? "h-[40vh] overflow-y-auto mt-14" : "min-h-[35vh]"}
             `}>
-              <div className="relative mt-6">
-                {sentence.split("").map((char, index) => {
-                  const inputChar = input[index];
-                  const isActive = index === input.length && stats.time > 0;
-                  return (
-                    <span
-                      key={index}
-                      className={`
-                        relative 
-                        ${isActive ? "text-emerald-500 border-b-2 border-emerald-500" : ""}
-                        ${inputChar !== undefined
-                          ? inputChar === char
-                            ? theme === 'dark' ? "text-slate-300" : "text-slate-700"
-                            : "text-rose-500"
-                          : theme === 'dark' ? "text-slate-500" : "text-slate-400"
-                        }
-                        ${isActive ? "animate-pulse" : ""}
-                        ${stats.time <= 0 ? 'opacity-75' : ''}
-                        transition-colors duration-150
-                      `}
-                    >
-                      {char}
-                    </span>
-                  );
-                })}
+              <div className={`relative mt-6 ${animationThemes[selectedAnimation]?.className || ''}`}>
+                {selectedAnimation === 'blur' ? (
+                  // Blur focus rendering - by words
+                  sentence.split(" ").map((word, wordIndex) => {
+                    const wordStartIndex = sentence.split(" ").slice(0, wordIndex).join(" ").length + (wordIndex > 0 ? 1 : 0);
+                    const wordEndIndex = wordStartIndex + word.length;
+                    const isPastWord = wordEndIndex <= input.length;
+                    const isCurrentWord = input.length >= wordStartIndex && input.length < wordEndIndex;
+                    const isFutureWord = wordStartIndex > input.length;
+
+                    // Find the current word index more accurately
+                    let currentWordIndex = 0;
+                    const words = sentence.split(" ");
+                    let charCount = 0;
+                    for (let i = 0; i < words.length; i++) {
+                      charCount += words[i].length + (i > 0 ? 1 : 0); // +1 for space
+                      if (input.length < charCount) {
+                        currentWordIndex = i;
+                        break;
+                      }
+                    }
+
+                    const isNextWord = wordIndex === currentWordIndex + 1;
+                    const shouldBlur = isFutureWord && wordIndex > currentWordIndex + 1;
+
+                    return (
+                      <span
+                        key={wordIndex}
+                        className={`
+                          relative inline-block mr-1
+                          ${shouldBlur ? 'blur-future' : 'blur-clear'}
+                          ${stats.time <= 0 ? 'opacity-75' : ''}
+                        `}
+                      >
+                        {word.split("").map((char, charIndex) => {
+                          const globalIndex = wordStartIndex + charIndex;
+                          const inputChar = input[globalIndex];
+                          const isActive = globalIndex === input.length && stats.time > 0;
+                          return (
+                            <span
+                              key={charIndex}
+                              className={`
+                                relative
+                                ${isActive ? "text-emerald-500 border-b-2 border-emerald-500" : ""}
+                                ${inputChar !== undefined
+                                  ? inputChar === char
+                                    ? theme === 'dark' ? "text-slate-300" : "text-slate-700"
+                                    : "text-rose-500"
+                                  : theme === 'dark' ? "text-slate-500" : "text-slate-400"
+                                }
+                                ${isActive ? "animate-pulse" : ""}
+                                transition-colors duration-150
+                              `}
+                            >
+                              {char}
+                            </span>
+                          );
+                        })}
+                      </span>
+                    );
+                  })
+                ) : (
+                  // Normal character-by-character rendering
+                  sentence.split("").map((char, index) => {
+                    const inputChar = input[index];
+                    const isActive = index === input.length && stats.time > 0;
+                    return (
+                      <span
+                        key={index}
+                        className={`
+                          relative
+                          ${isActive ? "text-emerald-500 border-b-2 border-emerald-500" : ""}
+                          ${inputChar !== undefined
+                            ? inputChar === char
+                              ? theme === 'dark' ? "text-slate-300" : "text-slate-700"
+                              : "text-rose-500"
+                            : theme === 'dark' ? "text-slate-500" : "text-slate-400"
+                          }
+                          ${isActive ? "animate-pulse" : ""}
+                          ${stats.time <= 0 ? 'opacity-75' : ''}
+                          transition-colors duration-150
+                        `}
+                      >
+                        {char}
+                      </span>
+                    );
+                  })
+                )}
               </div>
               <input
                 ref={inputRef}
@@ -530,12 +633,14 @@ export default function ProfessionalTypingLab() {
                 icon={<ClockIcon className="w-6 h-6" />}
                 color="text-emerald-500"
                 unit="s"
+                theme={theme}
               />
               <StatPanel
                 value={stats.wpm}
                 label="Words Per Minute"
                 icon={<BoltIcon className="w-6 h-6" />}
                 color="text-emerald-500"
+                theme={theme}
               />
               <StatPanel
                 value={stats.accuracy}
@@ -543,6 +648,7 @@ export default function ProfessionalTypingLab() {
                 icon={<ChartBarIcon className="w-6 h-6" />}
                 color="text-emerald-500"
                 unit="%"
+                theme={theme}
               />
             </div>
 
@@ -561,50 +667,27 @@ export default function ProfessionalTypingLab() {
 
         {gameState === "results" && (
           <div className="animate-slide-up max-w-4xl mx-auto">
-            <div className={`${theme === 'dark' ? 'bg-slate-800/90' : 'bg-white/90'} backdrop-blur-lg rounded-xl p-8 md:p-10 border ${theme === 'dark' ? 'border-slate-700/30' : 'border-slate-200/70'} shadow-xl`}>
+            <div className={`${theme === 'dark' ? 'bg-slate-800/90' : 'bg-white/90'} backdrop-blur-lg rounded-xl p-8 md:p-10 border ${theme === 'dark' ? 'border-slate-700/30' : 'border-slate-300'} shadow-xl`}>
               <div className="text-center mb-10">
                 <h2 className={`text-3xl ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'} mb-3`}>
-                  {user ? user.name : 'Your'} Results
+                  {session ? session.user.name : 'Your'} Results
                 </h2>
                 <p className={`text-lg ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                  {user ? 'Score saved to leaderboard!' : 'Great job! Sign in to save your score.'}
+                  {session ? 'Score saved to leaderboard!' : 'Great job! Sign in to save your score.'}
                 </p>
               </div>
 
               {/* Sign In Prompt in Results */}
-              {showSignInPrompt && !user && (
-                <div className="mb-8 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-6">
+              {showSignInPrompt && !session && (
+                <div className={`mb-8 ${theme === 'dark' ? 'bg-yellow-900/20 border-yellow-500/30' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-6`}>
                   <div className="text-center">
-                    <UserPlusIcon className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
-                    <h3 className="text-xl font-semibold text-slate-200 mb-2">
-                      Want to save this score?
+                    <UserPlusIcon className={`w-12 h-12 ${theme === 'dark' ? 'text-yellow-500' : 'text-yellow-600'} mx-auto mb-3`} />
+                    <h3 className={`text-xl font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'} mb-2`}>
+                      Please Sign In
                     </h3>
-                    <p className="text-slate-400 mb-4">
-                      Sign in to compete on the leaderboard and track your progress!
+                    <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
+                      Your score will be saved when you sign in to your account.
                     </p>
-                    <div className="flex justify-center gap-3">
-                      <button
-                        onClick={handleGoogleSignIn}
-                        className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-100 text-gray-800 rounded-lg font-medium transition-colors"
-                      >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24">
-                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                        </svg>
-                        Sign in with Google
-                      </button>
-                      <button
-                        onClick={handleGitHubSignIn}
-                        className="flex items-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                        </svg>
-                        Sign in with GitHub
-                      </button>
-                    </div>
                   </div>
                 </div>
               )}
@@ -615,6 +698,7 @@ export default function ProfessionalTypingLab() {
                   label="Words Per Minute"
                   icon={<BoltIcon className="w-7 h-7" />}
                   color="text-emerald-500"
+                  theme={theme}
                 />
                 <StatPanel
                   value={stats.accuracy}
@@ -622,12 +706,13 @@ export default function ProfessionalTypingLab() {
                   icon={<ChartBarIcon className="w-7 h-7" />}
                   color="text-emerald-500"
                   unit="%"
+                  theme={theme}
                 />
               </div>
 
               {submitError && (
-                <div className="mb-6 p-4 bg-rose-900/20 border border-rose-500/30 rounded-lg">
-                  <p className="text-rose-400 text-center">{submitError}</p>
+                <div className={`mb-6 p-4 ${theme === 'dark' ? 'bg-rose-900/20 border-rose-500/30' : 'bg-rose-50 border-rose-200'} border rounded-lg`}>
+                  <p className={`${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'} text-center`}>{submitError}</p>
                 </div>
               )}
 

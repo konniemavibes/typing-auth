@@ -71,7 +71,7 @@ export default function SignupPage() {
         return;
       }
 
-      // Redirect to login
+      // Redirect to login after successful signup
       router.push('/auth/login?signup=success');
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -80,26 +80,26 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 dark:from-emerald-400 dark:to-emerald-600 bg-clip-text text-transparent mb-2">
             Get Started
           </h1>
-          <p className="text-slate-400">Create your typing account</p>
+          <p className="text-gray-600 dark:text-slate-400">Create your typing account</p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-slate-800/90 rounded-2xl border border-slate-700 shadow-2xl p-8 backdrop-blur-sm animate-slide-up">
+        <div className="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-2xl p-8 backdrop-blur-sm animate-slide-up">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username Field */}
             <div>
-              <label className="block text-slate-200 text-sm font-medium mb-2">
+              <label className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
                 Username
               </label>
               <div className="relative">
-                <UserIcon className="absolute left-3 top-3.5 w-5 h-5 text-slate-500" />
+                <UserIcon className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 dark:text-slate-500" />
                 <input
                   type="text"
                   name="username"
@@ -107,18 +107,18 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="Choose a username"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-xl text-gray-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
                 />
               </div>
             </div>
 
             {/* Email Field */}
             <div>
-              <label className="block text-slate-200 text-sm font-medium mb-2">
+              <label className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <EnvelopeIcon className="absolute left-3 top-3.5 w-5 h-5 text-slate-500" />
+                <EnvelopeIcon className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 dark:text-slate-500" />
                 <input
                   type="email"
                   name="email"
@@ -126,18 +126,18 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="you@example.com"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-xl text-gray-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
                 />
               </div>
             </div>
 
             {/* Password Field */}
             <div>
-              <label className="block text-slate-200 text-sm font-medium mb-2">
+              <label className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
                 Password
               </label>
               <div className="relative">
-                <LockClosedIcon className="absolute left-3 top-3.5 w-5 h-5 text-slate-500" />
+                <LockClosedIcon className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 dark:text-slate-500" />
                 <input
                   type="password"
                   name="password"
@@ -145,19 +145,19 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-xl text-gray-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
                 />
               </div>
-              <p className="text-xs text-slate-400 mt-1">At least 8 characters</p>
+              <p className="text-xs text-gray-600 dark:text-slate-400 mt-1">At least 8 characters</p>
             </div>
 
             {/* Confirm Password Field */}
             <div>
-              <label className="block text-slate-200 text-sm font-medium mb-2">
+              <label className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
                 Confirm Password
               </label>
               <div className="relative">
-                <LockClosedIcon className="absolute left-3 top-3.5 w-5 h-5 text-slate-500" />
+                <LockClosedIcon className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 dark:text-slate-500" />
                 <input
                   type="password"
                   name="confirmPassword"
@@ -165,21 +165,21 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-xl text-gray-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
                 />
               </div>
             </div>
 
             {/* Gender Field */}
             <div>
-              <label className="block text-slate-200 text-sm font-medium mb-2">
+              <label className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
                 Gender
               </label>
               <select
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-xl text-gray-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -188,7 +188,7 @@ export default function SignupPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm animate-fade-in">
+              <div className="p-3 rounded-lg bg-red-100 dark:bg-red-500/10 border border-red-300 dark:border-red-500/30 text-red-700 dark:text-red-400 text-sm animate-fade-in">
                 {error}
               </div>
             )}
@@ -254,11 +254,11 @@ export default function SignupPage() {
           </div>
 
           {/* Footer */}
-          <p className="text-center text-slate-400 text-sm mt-8">
+          <p className="text-center text-gray-600 dark:text-slate-400 text-sm mt-8">
             Already have an account?{' '}
             <Link
               href="/auth/login"
-              className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+              className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium transition-colors"
             >
               Login here
             </Link>

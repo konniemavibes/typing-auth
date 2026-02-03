@@ -4,6 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-50 transition-colors duration-300;
+  }
+}
+
 @layer utilities {
   .font-geist {
     font-family: 'Inter', system-ui, sans-serif;
@@ -30,15 +40,59 @@
     from { transform: translateY(20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
+
+  /* Typing Animation Effects */
+  .animate-wave {
+    animation: wave 2s ease-in-out infinite;
+  }
+
+  .animate-pulse-theme {
+    animation: pulse-theme 1.5s ease-in-out infinite;
+  }
+
+  .animate-fade {
+    animation: fade 3s ease-in-out infinite;
+  }
+
+  .animate-blur-focus {
+    /* This class will be applied to the container, individual blur effects handled in component */
+  }
+
+  .blur-future {
+    filter: blur(2px);
+    opacity: 0.6;
+    transition: filter 0.3s ease, opacity 0.3s ease;
+  }
+
+  .blur-clear {
+    filter: blur(0px);
+    opacity: 1;
+    transition: filter 0.3s ease, opacity 0.3s ease;
+  }
+
+  @keyframes wave {
+    0%, 100% { transform: translateY(0px); }
+    25% { transform: translateY(-3px); }
+    50% { transform: translateY(0px); }
+    75% { transform: translateY(3px); }
+  }
+
+  @keyframes pulse-theme {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.02); }
+  }
+
+  @keyframes fade {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
 }
 
 /* Add to your global CSS */
 body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) 
           env(safe-area-inset-bottom) env(safe-area-inset-left);
-          /* Global Styles */
-font-family: var(--font-dm-sans); /* <-- use DM Sans variable */
-
+  font-family: var(--font-dm-sans); /* <-- use DM Sans variable */
 }
 
 .mobile-controls {

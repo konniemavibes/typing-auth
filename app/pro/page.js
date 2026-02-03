@@ -1,6 +1,6 @@
-"use client";
+  "use client";
 import { useState, useEffect } from 'react';
-import { TrophyIcon, ClockIcon, ChartBarIcon, ArrowPathIcon, UserIcon, ArrowTrendingUpIcon, RocketLaunchIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, ClockIcon, ChartBarIcon, ArrowPathIcon, UserIcon, ArrowTrendingUpIcon, RocketLaunchIcon, UserGroupIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import TrueFocus from '../pro/TrueFocus';
 import SkeletonLoader from '../components/SkeletonLoader';
@@ -22,15 +22,19 @@ export default function LeaderboardPage() {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch scores');
+        console.error('API Error:', response.status, data);
+        throw new Error(data.error || `HTTP Error: ${response.status}`);
       }
       
-      const uniqueUserScores = processUniqueHighestScores(data.data);
+      const scoresData = data.data || [];
+      const uniqueUserScores = processUniqueHighestScores(scoresData);
       setScores(uniqueUserScores.slice(0, 20));
+      setError('');
       setLoading(false);
     } catch (error) {
       console.error('Fetch error:', error);
-      setError(error.message);
+      setError(error.message || 'Failed to fetch scores');
+      setScores([]);
       setLoading(false);
     }
   };
@@ -39,9 +43,12 @@ export default function LeaderboardPage() {
     const userMap = new Map();
     
     allScores.forEach(score => {
-      const username = score.name.trim().toLowerCase();
-      if (!userMap.has(username) || score.wpm > userMap.get(username).wpm) {
-        userMap.set(username, score);
+      const username = (score.user?.username || score.name || '').trim().toLowerCase();
+      if (username && (!userMap.has(username) || score.wpm > userMap.get(username).wpm)) {
+        userMap.set(username, {
+          ...score,
+          name: score.user?.username || score.name,
+        });
       }
     });
     
@@ -93,6 +100,10 @@ export default function LeaderboardPage() {
 
         {loading ? (
           <SkeletonLoader />
+        ) : scores.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-slate-400 text-lg">No scores available yet. Be the first to set a record!</p>
+          </div>
         ) : (
           <>
             {/* Top 3 Winners Podium */}
@@ -102,11 +113,23 @@ export default function LeaderboardPage() {
                 <div className="order-1 pt-10">
                   <div className="bg-slate-800/90 rounded-t-lg p-5 border border-slate-700/50 text-center transform transition-all hover:translate-y-1">
                     <div className="flex justify-center">
-                      <div className="bg-slate-400 rounded-full w-16 h-16 flex items-center justify-center -mt-12 border-4 border-slate-800 shadow-lg">
-                        <TrophyIcon className="w-8 h-8 text-slate-900" />
+                      <div className="relative">
+                        <div className="bg-slate-400 rounded-full w-16 h-16 flex items-center justify-center -mt-12 border-4 border-slate-800 shadow-lg">
+                          <TrophyIcon className="w-8 h-8 text-slate-900" />
+                        </div>
+                        {scores[1].user?.image && (
+                          <img
+                            src={scores[1].user.image}
+                            alt={`${scores[1].name} profile`}
+                            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-slate-800"
+                          />
+                        )}
                       </div>
                     </div>
                     <h3 className="text-xl font-semibold text-slate-300 mt-2">{scores[1].name}</h3>
+                    {scores[1].user?.gender && (
+                      <p className="text-sm text-slate-400 capitalize">{scores[1].user.gender}</p>
+                    )}
                     <div className="flex justify-center space-x-4 mt-3">
                       <div className="text-sm text-slate-400">
                         <ClockIcon className="w-4 h-4 inline mr-1" />
@@ -150,11 +173,23 @@ export default function LeaderboardPage() {
                 <div className="order-2 pt-14">
                   <div className="bg-slate-800/90 rounded-t-lg p-5 border border-slate-700/50 text-center transform transition-all hover:translate-y-1">
                     <div className="flex justify-center">
-                      <div className="bg-amber-700 rounded-full w-14 h-14 flex items-center justify-center -mt-10 border-4 border-slate-800 shadow-lg">
-                        <TrophyIcon className="w-7 h-7 text-slate-900" />
+                      <div className="relative">
+                        <div className="bg-amber-700 rounded-full w-14 h-14 flex items-center justify-center -mt-10 border-4 border-slate-800 shadow-lg">
+                          <TrophyIcon className="w-7 h-7 text-slate-900" />
+                        </div>
+                        {scores[2].user?.image && (
+                          <img
+                            src={scores[2].user.image}
+                            alt={`${scores[2].name} profile`}
+                            className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-slate-800"
+                          />
+                        )}
                       </div>
                     </div>
                     <h3 className="text-lg font-semibold text-slate-300 mt-2">{scores[2].name}</h3>
+                    {scores[2].user?.gender && (
+                      <p className="text-sm text-slate-400 capitalize">{scores[2].user.gender}</p>
+                    )}
                     <div className="flex justify-center space-x-4 mt-3">
                       <div className="text-sm text-slate-400">
                         <ClockIcon className="w-4 h-4 inline mr-1" />
@@ -179,11 +214,27 @@ export default function LeaderboardPage() {
                 <div className="block sm:hidden">
                   {scores.slice(3).map((score, index) => (
                     <div key={score.id} className="p-4 border-b border-slate-700/50">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-3 mb-2">
                         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-700 text-sm font-semibold text-slate-300">
                           {index + 4}
                         </span>
-                        <span className="font-medium text-slate-300">{score.name}</span>
+                        {score.user?.image ? (
+                          <img
+                            src={score.user.image}
+                            alt={`${score.name} profile`}
+                            className="w-8 h-8 rounded-full border border-slate-600"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center">
+                            <UserIcon className="w-4 h-4 text-slate-400" />
+                          </div>
+                        )}
+                        <div>
+                          <span className="font-medium text-slate-300">{score.name}</span>
+                          {score.user?.gender && (
+                            <p className="text-xs text-slate-400 capitalize">{score.user.gender}</p>
+                          )}
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
@@ -211,9 +262,18 @@ export default function LeaderboardPage() {
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-slate-400">
                         <div className="flex items-center gap-2">
+                          <PhotoIcon className="w-4 h-4" />
+                          Profile
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-400">
+                        <div className="flex items-center gap-2">
                           <UserIcon className="w-4 h-4" />
                           Name
                         </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-400">
+                        Gender
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-slate-400">
                         <div className="flex items-center gap-2">
@@ -237,7 +297,21 @@ export default function LeaderboardPage() {
                             {index + 4}
                           </span>
                         </td>
+                        <td className="px-6 py-4">
+                          {score.user?.image ? (
+                            <img
+                              src={score.user.image}
+                              alt={`${score.name} profile`}
+                              className="w-8 h-8 rounded-full border border-slate-600"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center">
+                              <UserIcon className="w-4 h-4 text-slate-400" />
+                            </div>
+                          )}
+                        </td>
                         <td className="px-6 py-4 font-medium text-slate-300">{score.name}</td>
+                        <td className="px-6 py-4 text-slate-400 capitalize">{score.user?.gender || 'N/A'}</td>
                         <td className="px-6 py-4 text-slate-400">{score.wpm}</td>
                         <td className="px-6 py-4 text-slate-400">{score.accuracy}%</td>
                       </tr>

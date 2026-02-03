@@ -3,42 +3,40 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 // NextAuth Tables
 model Account {
-  id                 String  @id @default(cuid())
+  id                 String  @id @default(cuid()) @map("_id")
   userId             String
   type               String
   provider           String
   providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
+  refresh_token      String?
+  access_token       String?
   expires_at         Int?
   token_type         String?
   scope              String?
-  id_token           String?  @db.Text
+  id_token           String?
   session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model VerificationToken {
+  id         String   @id @default(cuid()) @map("_id")
   identifier String
   token      String   @unique
   expires    DateTime
@@ -48,7 +46,7 @@ model VerificationToken {
 
 // App User Model
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(cuid()) @map("_id")
   username      String?   @unique
   email         String?   @unique
   emailVerified DateTime?
@@ -57,22 +55,62 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
-  accounts Account[]
-  sessions Session[]
-  scores   Score[]
+
+  scores        Score[]
+  createdRaces  Race[]    @relation("CreatedRaces")
+  raceParticipants RaceParticipant[] @relation("RaceParticipants")
 }
 
 model Score {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid()) @map("_id")
   wpm       Int
   accuracy  Float
   rawWpm    Int
   createdAt DateTime @default(now())
-  
+
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([wpm])
+  @@index([userId])
+}
+
+model Race {
+  id           String   @id @default(cuid()) @map("_id")
+  roomCode     String   @unique
+  status       String   @default("waiting") // waiting, active, finished
+  startTime    DateTime?
+  endTime      DateTime?
+  countdown    Int      @default(0) // Countdown timer (0-10)
+  createdAt    DateTime @default(now())
+
+  creatorId    String
+  creator      User     @relation("CreatedRaces", fields: [creatorId], references: [id], onDelete: Cascade)
+  
+  participants RaceParticipant[]
+  sentenceId   Int      @default(0)
+
+  @@index([roomCode])
+  @@index([creatorId])
+}
+
+model RaceParticipant {
+  id           String   @id @default(cuid()) @map("_id")
+  raceId       String
+  race         Race     @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  
+  userId       String
+  user         User     @relation("RaceParticipants", fields: [userId], references: [id], onDelete: Cascade)
+  
+  wpm          Float    @default(0)
+  rawWpm       Float    @default(0)
+  accuracy     Float    @default(100)
+  progress     Int      @default(0) // characters typed
+  finished     Boolean  @default(false)
+  finishTime   DateTime?
+  createdAt    DateTime @default(now())
+
+  @@unique([raceId, userId])
+  @@index([raceId])
   @@index([userId])
 }

@@ -3,8 +3,23 @@ module.exports = {
     "./app/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
+      colors: {
+        // Light mode
+        light: {
+          bg: '#ffffff',
+          surface: '#f8f9fa',
+          text: '#1a1a1a',
+        },
+        // Dark mode (already using slate)
+        dark: {
+          bg: '#0f172a',
+          surface: '#1e293b',
+          text: '#f1f5f9',
+        }
+      },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
         'slide-up': 'slideUp 0.4s ease-out',

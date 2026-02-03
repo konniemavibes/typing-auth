@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate"
@@ -19,6 +19,7 @@
     "chart.js": "^4.4.7",
     "framer-motion": "^12.0.3",
     "lucide-react": "^0.474.0",
+    "mongodb": "^7.0.0",
     "next": "^16.1.2",
     "next-auth": "^4.24.13",
     "react": "^19.0.0",
