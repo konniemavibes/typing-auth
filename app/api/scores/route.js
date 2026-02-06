@@ -5,7 +5,13 @@ const prisma = new PrismaClient();
 
 export async function POST(request) {
   try {
-    const { wpm, accuracy, rawWpm, userId } = await request.json();
+    let { wpm, accuracy, rawWpm, userId } = await request.json();
+
+    // Normalize accuracy to 0-100 range
+    if (accuracy > 100) {
+      accuracy = accuracy / 100;
+    }
+    accuracy = Math.min(100, Math.max(0, accuracy));
 
     console.log('Received score data:', { wpm, accuracy, rawWpm, userId });
 

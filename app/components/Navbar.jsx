@@ -13,6 +13,7 @@ import {
   ArrowLeftOnRectangleIcon,
   ChevronDownIcon,
   UserPlusIcon,
+  ComputerDesktopIcon,
 } from "@heroicons/react/24/outline";
 import { MdMenuBook } from 'react-icons/md';
 import FuzzyText from '../components/FuzzyText';
@@ -106,8 +107,9 @@ export default function NavBar() {
 
   return (
     <nav className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center p-3 shadow-sm dark:shadow-md">
-      <span className="text-4xl font-[600] text-emerald-500">
-        Typing practice
+      <span className="text-4xl font-[600] text-emerald-500 flex items-center gap-2">
+        <ComputerDesktopIcon className="w-8 h-8" />
+        Flash key
         <span className="inline-block text-xl align-middle" style={{width: '35px', height: '35px'}}>
           <FuzzyText baseIntensity={0.2}>💖</FuzzyText>
         </span>
@@ -124,11 +126,6 @@ export default function NavBar() {
         <Link href="/pro" className="flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
           <ChartBarIcon className="w-5 h-5" />
           <span className="hidden md:inline">Leaderboard</span>
-        </Link>
-
-        <Link href="/race" className="flex items-center gap-2 text-gray-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
-          <span className="text-lg">🏎️</span>
-          <span className="hidden md:inline">Race</span>
         </Link>
 
         {session && (

@@ -9,8 +9,14 @@ const prisma = new PrismaClient();
 export async function POST(request, { params }) {
   try {
     const { roomCode } = await params;
-    const { wpm, accuracy, rawWpm } = await request.json();
+    let { wpm, accuracy, rawWpm } = await request.json();
     const session = await getServerSession(authOptions);
+
+    // Normalize accuracy to 0-100 range
+    if (accuracy > 100) {
+      accuracy = accuracy / 100;
+    }
+    accuracy = Math.min(100, Math.max(0, accuracy));
 
     if (!session?.user?.email) {
       return NextResponse.json(

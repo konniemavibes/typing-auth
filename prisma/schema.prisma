@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
@@ -23,7 +23,6 @@ model Account {
   session_state      String?
 
   @@unique([provider, providerAccountId])
-  @@index([userId])
 }
 
 model Session {
@@ -90,7 +89,6 @@ model Race {
   participants RaceParticipant[]
   sentenceId   Int      @default(0)
 
-  @@index([roomCode])
   @@index([creatorId])
 }
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '../context/ThemeContext';
 import {
   PlayIcon,
   XMarkIcon,
@@ -15,6 +16,7 @@ import RaceResultsModal from '../components/RaceResultsModal';
 import { sentences } from '../constants/sentences';
 
 export default function RacePage() {
+  const { theme } = useTheme();
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -112,6 +114,44 @@ export default function RacePage() {
       }
     };
   }, [roomCode, mode, raceStarted]);
+
+  // Prevent backspace from navigating back in the browser
+  useEffect(() => {
+    const handleBackspaceNavigation = (e) => {
+      // Only prevent backspace if not in an input field
+      if (e.key === 'Backspace' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleBackspaceNavigation);
+    return () => {
+      window.removeEventListener('keydown', handleBackspaceNavigation);
+    };
+  }, []);
+
+  // Global keyboard listener for typing during race
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (!raceStarted || mode !== 'racing') return;
+
+      if (e.key === ' ') {
+        e.preventDefault();
+        setUserInput(userInput + ' ');
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        setUserInput(userInput.slice(0, -1));
+      } else if (e.key.length === 1) {
+        // Regular character
+        setUserInput(userInput + e.key);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [raceStarted, mode, userInput]);
 
   const handleCreateRoom = async () => {
     try {
@@ -248,6 +288,20 @@ export default function RacePage() {
     return typed.length > 0 ? (correctChars / typed.length) * 100 : 100;
   };
 
+  const handleKeyDown = (e) => {
+    // Prevent page scrolling when space is pressed, but allow the character to be typed
+    if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      // Manually add space to input
+      setUserInput(userInput + ' ');
+    }
+    // Allow backspace to work properly
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      setUserInput(userInput.slice(0, -1));
+    }
+  };
+
   const handleTyping = async (e) => {
     const value = e.target.value;
     setUserInput(value);
@@ -266,7 +320,7 @@ export default function RacePage() {
       fetch(`/api/race/${roomCode}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ progress, accuracy: Math.round(accuracy), wpm, rawWpm })
+        body: JSON.stringify({ progress, accuracy: accuracy, wpm, rawWpm })
       }).catch(err => console.error('Progress update failed:', err));
 
       // Check if finished
@@ -276,7 +330,7 @@ export default function RacePage() {
           const res = await fetch(`/api/race/${roomCode}/finish`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ wpm, accuracy: Math.round(accuracy), rawWpm })
+            body: JSON.stringify({ wpm, accuracy: accuracy, rawWpm })
           });
 
           if (res.ok) {
@@ -318,43 +372,43 @@ export default function RacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}`}>
       <NavBar />
       
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Home Screen */}
         {mode === 'home' && (
           <div className="text-center py-12">
-            <h1 className="text-5xl font-bold text-slate-100 mb-4">
+            <h1 className={`text-5xl font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'} mb-4`}>
               Race Mode
             </h1>
-            <p className="text-slate-400 mb-12 text-lg">
+            <p className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'} mb-12 text-lg`}>
               Challenge your friends in real-time typing races
             </p>
 
             <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
               <button
                 onClick={handleCreateRoom}
-                className="p-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500 transition-all group"
+                className={`p-8 rounded-xl ${theme === 'dark' ? 'bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500' : 'bg-emerald-50 border border-emerald-200 hover:border-emerald-400'} transition-all group`}
               >
                 <div className="text-4xl mb-4">🚀</div>
-                <h2 className="text-xl font-bold text-emerald-400 mb-2">
+                <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'} mb-2`}>
                   Create Room
                 </h2>
-                <p className="text-slate-400 text-sm">
+                <p className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'} text-sm`}>
                   Start a new race and invite friends
                 </p>
               </button>
 
               <button
                 onClick={() => setMode('join')}
-                className="p-8 rounded-xl bg-blue-500/10 border border-blue-500/30 hover:border-blue-500 transition-all group"
+                className={`p-8 rounded-xl ${theme === 'dark' ? 'bg-blue-500/10 border border-blue-500/30 hover:border-blue-500' : 'bg-blue-50 border border-blue-200 hover:border-blue-400'} transition-all group`}
               >
                 <div className="text-4xl mb-4">🎯</div>
-                <h2 className="text-xl font-bold text-blue-400 mb-2">
+                <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'} mb-2`}>
                   Join Room
                 </h2>
-                <p className="text-slate-400 text-sm">
+                <p className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'} text-sm`}>
                   Join an existing race with a room code
                 </p>
               </button>
@@ -365,17 +419,21 @@ export default function RacePage() {
         {/* Join Screen */}
         {mode === 'join' && (
           <div className="max-w-md mx-auto py-12">
-            <h2 className="text-3xl font-bold text-slate-100 mb-6">
+            <h2 className={`text-3xl font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'} mb-6`}>
               Enter Room Code
             </h2>
 
-            <div className="bg-slate-800/90 rounded-xl p-8 border border-slate-700">
+            <div className={`${theme === 'dark' ? 'bg-slate-800/90 border-slate-700' : 'bg-slate-50 border-slate-200'} rounded-xl p-8 border`}>
               <input
                 type="text"
                 placeholder="Enter room code"
                 value={inputCode}
                 onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 mb-4"
+                className={`w-full px-4 py-3 rounded-lg focus:outline-none focus:border-emerald-500 mb-4 ${
+                  theme === 'dark'
+                    ? 'bg-slate-700/50 border border-slate-600 text-slate-100 placeholder-slate-500'
+                    : 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400'
+                }`}
               />
 
               {error && (
@@ -477,7 +535,7 @@ export default function RacePage() {
                       Practice typing this sentence:
                     </p>
                     <div className="bg-slate-800/90 p-6 rounded-lg border border-slate-700 max-w-4xl mx-auto mb-6">
-                      <p className="text-xl font-mono text-slate-300 leading-relaxed text-center">
+                      <p className="text-3xl font-mono text-slate-300 leading-relaxed text-center">
                         {currentSentence.split('').map((char, idx) => {
                           let color = 'text-slate-400';
                           if (idx < userInput.length) {
@@ -489,13 +547,23 @@ export default function RacePage() {
                           return (
                             <span
                               key={idx}
-                              className={`${color} ${
+                              className={`inline-block align-middle ${
                                 idx === userInput.length
                                   ? 'bg-emerald-500/30'
                                   : ''
                               }`}
                             >
-                              {char}
+                              {char === ' ' ? (
+                                <span className={`inline-flex items-center justify-center w-5 h-5 align-middle mx-0.5 ${
+                                  idx < userInput.length
+                                    ? userInput[idx] === ' '
+                                      ? 'bg-emerald-500/30 border border-emerald-400 rounded'
+                                      : 'bg-red-500/30 border border-red-400 rounded'
+                                    : 'bg-slate-700/40 rounded'
+                                }`} title="Space"></span>
+                              ) : (
+                                <span className={color}>{char}</span>
+                              )}
                             </span>
                           );
                         })}
@@ -578,16 +646,16 @@ export default function RacePage() {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 {/* Main Typing Area */}
                 <div className="lg:col-span-3">
-                  <div className="bg-slate-800/90 rounded-xl p-8 border border-slate-700">
+                  <div className={`${theme === 'dark' ? 'bg-slate-800/90 border-slate-700' : 'bg-white border-slate-200'} rounded-xl p-8 border`}>
                     <div className="mb-6">
                       <p className="text-slate-400 text-center text-lg mb-4">
                         Type this sentence:
                       </p>
-                      <div className="bg-slate-900 p-8 rounded-lg mb-6 relative min-h-[120px] flex items-center justify-center">
+                      <div className={`${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'} p-8 rounded-lg mb-6 relative min-h-[120px] flex items-center justify-center`}>
                         {!currentSentence ? (
                           <p className="text-slate-400">Loading sentence...</p>
                         ) : (
-                          <div className="text-2xl font-mono text-slate-300 leading-relaxed relative inline-block">
+                          <div className={`text-4xl font-mono ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'} leading-relaxed relative inline-block`}>
                             {currentSentence.split('').map((char, idx) => {
                               let color = 'text-slate-400';
                               if (idx < userInput.length) {
@@ -603,43 +671,64 @@ export default function RacePage() {
                                 .sort((a, b) => (b.wpm || 0) - (a.wpm || 0));
                               
                               return (
-                                <span key={idx} className="relative inline-block">
-                                  <span
-                                    className={`${color} ${
-                                      idx === userInput.length
-                                        ? 'bg-emerald-500/30 border-b-2 border-emerald-400'
-                                        : ''
-                                    }`}
-                                  >
-                                    {char}
-                                  </span>
+                                <span key={idx} className="relative inline-block align-middle">
+                                  {char === ' ' ? (
+                                    <span
+                                      className={`inline-flex items-center justify-center w-7 h-7 align-middle mx-0.5 ${
+                                        idx < userInput.length
+                                          ? userInput[idx] === ' '
+                                            ? 'bg-emerald-500/30 border border-emerald-400 rounded'
+                                            : 'bg-red-500/30 border border-red-400 rounded'
+                                          : idx === userInput.length
+                                          ? 'bg-emerald-500/30 border-b-2 border-emerald-400 rounded'
+                                          : 'bg-slate-700/40 rounded'
+                                      }`}
+                                      title="Space"
+                                    >
+                                    </span>
+                                  ) : (
+                                    <span
+                                      className={`${color} ${
+                                        idx === userInput.length
+                                          ? 'bg-emerald-500/30 border-b-2 border-emerald-400'
+                                          : ''
+                                      }`}
+                                    >
+                                      {char}
+                                    </span>
+                                  )}
                                   
                                   {/* Show inline cursors for other participants */}
                                   {participantsAtPosition.length > 0 && (
-                                    <div className="absolute -top-8 left-0 flex gap-1">
-                                      {participantsAtPosition.map((p, pidx) => (
-                                        <div
-                                          key={p.userId}
-                                          className="relative flex flex-col items-center"
-                                        >
-                                          {p.user?.image ? (
-                                            <img
-                                              src={p.user.image}
-                                              alt={p.user.username}
-                                              className="w-6 h-6 rounded-full border border-blue-400 shadow-lg"
-                                              title={`${p.user.username}: ${Math.round(p.wpm)} WPM`}
-                                            />
-                                          ) : (
-                                            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white">
-                                              |
+                                    <>
+                                      <span className="text-blue-400 text-4xl font-bold leading-none">|</span>
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 -top-12 flex flex-col items-center gap-0.5">
+                                        <div className="flex gap-1">
+                                          {participantsAtPosition.map((p, pidx) => (
+                                            <div
+                                              key={p.userId}
+                                              className="relative flex flex-col items-center"
+                                            >
+                                              {p.user?.image ? (
+                                                <img
+                                                  src={p.user.image}
+                                                  alt={p.user.username}
+                                                  className="w-5 h-5 rounded-full border border-blue-400 shadow-lg"
+                                                  title={`${p.user.username}: ${Math.round(p.wpm)} WPM`}
+                                                />
+                                              ) : (
+                                                <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white">
+                                                  •
+                                                </div>
+                                              )}
+                                              <div className="text-xs text-blue-400 whitespace-nowrap mt-0.5 font-semibold">
+                                                {p.user.username}
+                                              </div>
                                             </div>
-                                          )}
-                                          <div className="text-xs text-blue-400 whitespace-nowrap mt-1 font-semibold">
-                                            {p.user.username}
-                                          </div>
+                                          ))}
                                         </div>
-                                      ))}
-                                    </div>
+                                      </div>
+                                    </>
                                   )}
                                 </span>
                               );
@@ -652,23 +741,13 @@ export default function RacePage() {
                           {currentSentence && userInput.length < currentSentence.length ? '|' : '✓'}
                         </div>
                       </div>
-
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={userInput}
-                        onChange={handleTyping}
-                        className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-                        placeholder="Start typing..."
-                        autoFocus
-                      />
                     </div>
                   </div>
                 </div>
 
                 {/* Live Leaderboard */}
-                <div className="bg-slate-800/90 rounded-xl p-6 border border-slate-700 h-fit sticky top-8">
-                  <h3 className="text-lg font-bold text-emerald-400 mb-4">Live Rankings</h3>
+                <div className={`${theme === 'dark' ? 'bg-slate-800/90 border-slate-700' : 'bg-white border-slate-200'} rounded-xl p-6 border h-fit sticky top-8`}>
+                  <h3 className={`text-lg font-bold ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'} mb-4`}>Live Rankings</h3>
                   <div className="space-y-3">
                     {participants
                       .slice()

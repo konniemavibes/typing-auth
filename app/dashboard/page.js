@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTheme } from '../context/ThemeContext';
 import SuccessModal from '../components/SuccessModal';
-import NavBar from '../components/Navbar';
+import DashboardSidebar from '../components/DashboardSidebar';
 import {
   UserIcon,
   ArrowRightOnRectangleIcon,
@@ -20,6 +20,7 @@ import {
   SunIcon,
   MoonIcon,
   BoltIcon,
+  Bars3Icon,
 } from '@heroicons/react/24/outline';
 
 export default function Dashboard() {
@@ -37,6 +38,8 @@ export default function Dashboard() {
     latestWpm: 0,
     latestAccuracy: 0,
   });
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [weeklyTrend, setWeeklyTrend] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
@@ -46,6 +49,7 @@ export default function Dashboard() {
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -87,14 +91,50 @@ export default function Dashboard() {
           const sortedScores = scoresData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           const latestScore = sortedScores[0];
 
+          // Ensure accuracy is a valid percentage (0-100)
+          const latestAccuracy = latestScore ? Math.min(100, Math.max(0, parseFloat(latestScore.accuracy))) : 0;
+          const normalizedAvgAccuracy = Math.min(100, Math.max(0, parseFloat(avgAccuracy)));
+
           setStats({
             totalTests,
             avgWpm: Math.round(avgWpm),
-            avgAccuracy: Math.round(avgAccuracy * 100) / 100,
+            avgAccuracy: Math.round(normalizedAvgAccuracy * 100) / 100,
             bestWpm,
             latestWpm: latestScore?.wpm || 0,
-            latestAccuracy: latestScore ? Math.round(latestScore.accuracy * 100) / 100 : 0,
+            latestAccuracy: Math.round(latestAccuracy * 100) / 100,
           });
+
+          // Calculate weekly data (last 7 days)
+          const last7Days = [];
+          for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            
+            const dayScores = scoresData.filter(score => {
+              const scoreDate = new Date(score.createdAt);
+              scoreDate.setHours(0, 0, 0, 0);
+              return scoreDate.getTime() === date.getTime();
+            });
+
+            const dayAvgWpm = dayScores.length > 0
+              ? dayScores.reduce((sum, s) => sum + s.wpm, 0) / dayScores.length
+              : 0;
+
+            last7Days.push({
+              date: date,
+              wpm: dayAvgWpm,
+              dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+            });
+          }
+
+          setWeeklyData(last7Days);
+
+          // Calculate trend (compare first 3 days vs last 3 days)
+          const first3Days = last7Days.slice(0, 3).reduce((sum, d) => sum + d.wpm, 0) / 3;
+          const last3Days = last7Days.slice(-3).reduce((sum, d) => sum + d.wpm, 0) / 3;
+          const trend = first3Days > 0 ? Math.round(((last3Days - first3Days) / first3Days) * 100) : 0;
+          setWeeklyTrend(trend);
         }
 
         // Fetch user data
@@ -194,7 +234,21 @@ export default function Dashboard() {
         buttonText="Let's Start"
       />
       <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'}`}>
-        <NavBar />
+        <DashboardSidebar isDark={isDark} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        
+        {/* Main Content Area */}
+        <div className="lg:ml-64 transition-all duration-300">
+          {/* Hamburger Menu Button - Mobile */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={`fixed top-20 left-4 lg:hidden p-2 rounded-lg z-40 transition ${
+              isDark
+                ? 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                : 'bg-white hover:bg-gray-100 text-gray-700 shadow-lg'
+            }`}
+          >
+            <Bars3Icon className="w-6 h-6" />
+          </button>
 
       {/* Settings Modal */}
       {showSettings && (
@@ -310,13 +364,30 @@ export default function Dashboard() {
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className={`text-4xl font-bold mb-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
-            Welcome back, {userData?.username || userData?.name || userData?.email}! 👋
-          </h2>
-          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Track your typing progress and improve your speed</p>
+      <main className="lg:ml-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 lg:pt-8">
+        {/* Welcome Section with Race Button */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+          <div>
+            <h2 className={`text-4xl font-bold mb-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
+              Welcome back, {userData?.username || userData?.name || userData?.email}! 👋
+            </h2>
+            <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Track your typing progress and improve your speed</p>
+          </div>
+          
+          {/* Race Button - Special Positioning */}
+          <Link
+            href="/race"
+            className={`
+              group flex items-center gap-3 px-6 py-4 rounded-xl font-bold text-lg
+              transition-all duration-300 transform hover:scale-105 hover:shadow-2xl
+              bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600
+              text-white shadow-lg
+              whitespace-nowrap
+            `}
+          >
+            <span className="text-2xl group-hover:animate-bounce">🏎️</span>
+            Race Mode
+          </Link>
         </div>
 
         {/* Stats Grid */}
@@ -412,6 +483,120 @@ export default function Dashboard() {
           </Link>
         </div>
 
+        {/* Advanced Stats Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Current Speed & Accuracy Card */}
+          <div className={`backdrop-blur-md border rounded-lg p-8 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
+            <div className="flex items-center gap-8">
+              {/* Circular Progress */}
+              <div className="relative w-32 h-32">
+                <svg className="w-full h-full" viewBox="0 0 120 120">
+                  {/* Background circle */}
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="54"
+                    fill="none"
+                    stroke={isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(0, 0, 0, 0.05)'}
+                    strokeWidth="8"
+                  />
+                  {/* Progress circle - gradient */}
+                  <defs>
+                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#a855f7" />
+                      <stop offset="100%" stopColor="#3b82f6" />
+                    </linearGradient>
+                  </defs>
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="54"
+                    fill="none"
+                    stroke="url(#progressGradient)"
+                    strokeWidth="8"
+                    strokeDasharray={`${(stats.latestAccuracy / 100) * 339.29} 339.29`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 60 60)"
+                  />
+                </svg>
+                {/* Center text */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className={`text-3xl font-bold ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
+                      {Math.round(stats.latestAccuracy)}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="flex-1 space-y-6">
+                <div>
+                  <p className={`text-xs font-semibold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    Current Speed
+                  </p>
+                  <p className={`text-3xl font-bold mt-1 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
+                    {stats.latestWpm}<span className={`text-base ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>wpm</span>
+                  </p>
+                </div>
+                <div>
+                  <p className={`text-xs font-semibold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    Accuracy
+                  </p>
+                  <p className={`text-3xl font-bold mt-1 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
+                    {Math.round(stats.latestAccuracy)}<span className={`text-base ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>%</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Speed Trend Chart */}
+          <div className={`backdrop-blur-md border rounded-lg p-8 lg:col-span-2 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
+            <div className="mb-6">
+              <h3 className={`text-xl font-bold ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>Speed Trend</h3>
+              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Last 7 Days</p>
+              <p className={`text-sm ${weeklyTrend >= 0 ? 'text-emerald-500' : 'text-red-500'} font-semibold mt-2`}>
+                {weeklyTrend >= 0 ? '📈' : '📉'} {weeklyTrend >= 0 ? '+' : ''}{weeklyTrend}%
+              </p>
+            </div>
+
+            {/* Simple Chart */}
+            <div className="relative h-48 flex items-end gap-2">
+              {/* Chart Bars - Real weekly data */}
+              {weeklyData.length > 0 ? (
+                weeklyData.map((day, idx) => {
+                  const maxWpm = Math.max(...weeklyData.map(d => d.wpm || 10), 70);
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                      <div
+                        className="w-full bg-gradient-to-t from-emerald-500 to-purple-500 rounded-t-lg transition-all hover:opacity-80"
+                        style={{ height: `${(day.wpm / maxWpm) * 160}px` }}
+                        title={`${Math.round(day.wpm)} WPM`}
+                      />
+                      <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        {day.dayName}
+                      </p>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className={`w-full text-center py-8 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                  No data yet
+                </div>
+              )}
+            </div>
+
+            {/* Stats Label */}
+
+            <div className="mt-6 pt-6 border-t" style={{ borderColor: isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(0, 0, 0, 0.05)' }}>
+              <p className={`text-sm font-semibold ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                {Math.round(stats.avgWpm)} <span className={`font-normal ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>WPM avg</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Recent Scores */}
         <div className={`backdrop-blur-md border rounded-lg overflow-hidden ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
           <div className={`p-6 border-b ${isDark ? 'border-slate-700/50' : 'border-gray-200'}`}>
@@ -505,6 +690,7 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+      </div>
     </div>
     </>
   );

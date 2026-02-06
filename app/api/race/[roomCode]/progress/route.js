@@ -9,7 +9,14 @@ const prisma = new PrismaClient();
 export async function POST(request, { params }) {
   try {
     const { roomCode } = await params;
-    const { progress, accuracy, wpm, rawWpm } = await request.json();
+    let { progress, accuracy, wpm, rawWpm } = await request.json();
+    
+    // Normalize accuracy to 0-100 range
+    if (accuracy > 100) {
+      accuracy = accuracy / 100;
+    }
+    accuracy = Math.min(100, Math.max(0, accuracy));
+    
     console.log(`Progress update for ${roomCode}:`, { progress, accuracy, wpm, rawWpm });
     
     const session = await getServerSession(authOptions);

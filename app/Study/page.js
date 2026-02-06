@@ -57,7 +57,9 @@ const typingLevels = [
           { text: "a a a a a a a a a a", instruction: "Press A repeatedly" },
           { text: "s s s s s s s s s s", instruction: "Press S repeatedly" },
           { text: "a s a s a s a s a s", instruction: "Alternate A and S" },
-          { text: "as as as as as as as", instruction: "Type 'as' together" }
+          { text: "as as as as as as as", instruction: "Type 'as' together" },
+          { text: "a a s a s a a s s a", instruction: "Varied A and S pattern" },
+          { text: "asa asa asa asa asa", instruction: "Type 'asa' pattern" }
         ]
       },
       {
@@ -70,7 +72,9 @@ const typingLevels = [
           { text: "f f f f f f f f f f", instruction: "Press F repeatedly" },
           { text: "a d a d a d a d a d", instruction: "Alternate A and D" },
           { text: "s f s f s f s f s f", instruction: "Alternate S and F" },
-          { text: "ad sf ad sf ad sf ad", instruction: "Type 'ad sf' pattern" }
+          { text: "ad sf ad sf ad sf ad", instruction: "Type 'ad sf' pattern" },
+          { text: "das fas das fas das", instruction: "Combined pattern" },
+          { text: "ads dfs ads dfs ads", instruction: "Alternating combinations" }
         ]
       },
       {
@@ -82,7 +86,9 @@ const typingLevels = [
           { text: "j j j j j j j j j j", instruction: "Press J repeatedly" },
           { text: "k k k k k k k k k k", instruction: "Press K repeatedly" },
           { text: "j k j k j k j k j k", instruction: "Alternate J and K" },
-          { text: "fj dk fj dk fj dk fj", instruction: "Type 'fj dk' pattern" }
+          { text: "fj dk fj dk fj dk fj", instruction: "Type 'fj dk' pattern" },
+          { text: "jka jkd jka jkd jka", instruction: "Combined pattern" },
+          { text: "kj jk kj jk kj jk", instruction: "Quick alternation" }
         ]
       },
       {
@@ -95,6 +101,7 @@ const typingLevels = [
           { text: "; ; ; ; ; ; ; ; ; ;", instruction: "Press ; repeatedly" },
           { text: "j l j l j l j l j l", instruction: "Alternate J and L" },
           { text: "k ; k ; k ; k ; k ;", instruction: "Alternate K and ;" },
+          { text: "asks fall flask flasks", instruction: "Real word patterns" },
           { text: "asdf jkl; asdf jkl;", instruction: "Type full home row" }
         ]
       },
@@ -106,7 +113,10 @@ const typingLevels = [
         exercises: [
           { text: "asdf jkl; asdf jkl; asdf jkl;", instruction: "Practice home row" },
           { text: "a s d f j k l ; a s d f j k l ;", instruction: "Type all home row keys" },
-          { text: "the quick brown fox jumps over the lazy dog", instruction: "Classic pangram" }
+          { text: "the quick brown fox jumps over the lazy dog", instruction: "Classic pangram" },
+          { text: "flask dask asks alls falls", instruction: "Home row words" },
+          { text: "said desk kale safe jade", instruction: "Word combination" },
+          { text: "flash slash seals leeds", instruction: "Double letter words" }
         ]
       }
     ]
@@ -128,7 +138,8 @@ const typingLevels = [
           { text: "i i i i i i i i i i", instruction: "Press I repeatedly" },
           { text: "d e d e d e d e d e", instruction: "Alternate D and E" },
           { text: "f i f i f i f i f i", instruction: "Alternate F and I" },
-          { text: "the quick brown fox", instruction: "Practice with words" }
+          { text: "ease idea fled inside", instruction: "Word combinations" },
+          { text: "beside beside ideals", instruction: "More word practice" }
         ]
       },
       {
@@ -141,7 +152,8 @@ const typingLevels = [
           { text: "u u u u u u u u u u", instruction: "Press U repeatedly" },
           { text: "e r e r e r e r e r", instruction: "Alternate E and R" },
           { text: "i u i u i u i u i u", instruction: "Alternate I and U" },
-          { text: "red rum runs under", instruction: "Practice with sentences" }
+          { text: "sure user rural rude", instruction: "Words with R and U" },
+          { text: "pure truer ruer urer", instruction: "Advanced combinations" }
         ]
       },
       {
@@ -154,7 +166,8 @@ const typingLevels = [
           { text: "y y y y y y y y y y", instruction: "Press Y repeatedly" },
           { text: "r t r t r t r t r t", instruction: "Alternate R and T" },
           { text: "u y u y u y u y u y", instruction: "Alternate U and Y" },
-          { text: "qwerty uiop qwerty uiop", instruction: "Type full top row" }
+          { text: "type try true treaty", instruction: "Words with T and Y" },
+          { text: "turkey turkey yearly", instruction: "Advanced T and Y" }
         ]
       },
       {
@@ -165,7 +178,10 @@ const typingLevels = [
         exercises: [
           { text: "qwertyuiop qwertyuiop", instruction: "Type the top row" },
           { text: "the quick brown fox jumps", instruction: "Practice with phrases" },
-          { text: "typewriter quality test", instruction: "Advanced top row practice" }
+          { text: "typewriter quality test", instruction: "Advanced top row practice" },
+          { text: "poetry poetry poetry", instruction: "Repetitive word pattern" },
+          { text: "equipment equipped equip", instruction: "Complex words" },
+          { text: "proper property type we", instruction: "Mixed word practice" }
         ]
       }
     ]
@@ -185,7 +201,10 @@ const typingLevels = [
         exercises: [
           { text: "1234567890 1234567890", instruction: "Type numbers 1-0" },
           { text: "!@#$%^&*() !@#$%^&*()", instruction: "Type symbols" },
-          { text: "the price is $123.45", instruction: "Numbers in context" }
+          { text: "the price is $123.45", instruction: "Numbers in context" },
+          { text: "2023 2024 2025 2026", instruction: "Year numbers" },
+          { text: "123-456-7890 phone", instruction: "Phone number format" },
+          { text: "email@website.com #tag", instruction: "Modern formats" }
         ]
       },
       {
@@ -196,7 +215,10 @@ const typingLevels = [
         exercises: [
           { text: "the quick brown fox jumps over the lazy dog", instruction: "Classic pangram" },
           { text: "sphinx of black quartz judge my vow", instruction: "Advanced pangram" },
-          { text: "pack my box with five dozen liquor jugs", instruction: "Complex sentence" }
+          { text: "pack my box with five dozen liquor jugs", instruction: "Complex sentence" },
+          { text: "how vexingly quick daft zebras jump", instruction: "Challenging pangram" },
+          { text: "waltz bad nymph for quick jigs vex", instruction: "Complex word order" },
+          { text: "jack quietly gave six dozen pewter mugs", instruction: "Another challenging text" }
         ]
       },
       {
@@ -207,7 +229,10 @@ const typingLevels = [
         exercises: [
           { text: "programming is the art of telling another human what one wants the computer to do", instruction: "Technical text" },
           { text: "the only way to do great work is to love what you do if you havent found it yet keep looking", instruction: "Motivational text" },
-          { text: "success is not final failure is not fatal it is the courage to continue that counts", instruction: "Inspirational text" }
+          { text: "success is not final failure is not fatal it is the courage to continue that counts", instruction: "Inspirational text" },
+          { text: "whether you think you can or you think you cant youre right", instruction: "Henry Ford quote" },
+          { text: "the future belongs to those who believe in the beauty of their dreams", instruction: "Eleanor Roosevelt quote" },
+          { text: "life is what happens when youre busy making other plans", instruction: "Philosophy text" }
         ]
       }
     ]
@@ -414,9 +439,12 @@ export default function ProfessionalTypingLab() {
   const hasSubmittedRef = useRef(false);
   const audioRef = useRef(null);
 
+  const completionSoundRef = useRef(null);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       audioRef.current = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
+      completionSoundRef.current = new Audio('https://www.soundjay.com/sounds/success-fanfare-trumpets-01.mp3');
     }
   }, []);
 
@@ -441,7 +469,13 @@ export default function ProfessionalTypingLab() {
     if (lesson.id > 1 && !completedLessons.has(lesson.id - 1)) {
       return; // Don't allow selecting locked lessons
     }
-
+    
+    // Prevent sidebar scrolling
+    const sidebar = document.querySelector('[data-sidebar]');
+    if (sidebar) {
+      sidebar.scrollTop = 0;
+    }
+    
     setSelectedLesson(lesson);
     setCurrentExerciseIndex(0);
     setShowModal(true);
@@ -466,11 +500,17 @@ export default function ProfessionalTypingLab() {
     timerStartedRef.current = false;
     startTimeRef.current = null;
 
+    setGameState('playing');
     if (inputRef.current) inputRef.current.focus();
   };
 
   const checkLessonCompletion = (lesson, finalAccuracy) => {
     return finalAccuracy >= lesson.targetAccuracy;
+  };
+
+  const tryAgain = () => {
+    if (!selectedLesson) return;
+    startExercise(selectedLesson, currentExerciseIndex);
   };
 
   const nextExercise = () => {
@@ -484,6 +524,10 @@ export default function ProfessionalTypingLab() {
       // Lesson completed
       setCompletedLessons(prev => new Set([...prev, selectedLesson.id]));
       setGameState('lesson-complete');
+      // Play completion sound
+      setTimeout(() => {
+        completionSoundRef.current?.play().catch(() => {});
+      }, 300);
     }
   };
 
@@ -519,6 +563,18 @@ export default function ProfessionalTypingLab() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Prevent scroll when modal is open
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showModal]);
 
   const endGame = useCallback(async () => {
     if (hasSubmittedRef.current) return;
@@ -662,242 +718,161 @@ export default function ProfessionalTypingLab() {
     router.push('/');
   };
 
-  const Sidebar = () => (
-    <>
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      <div className={`
-        fixed top-17 left-0 h-screen w-72 flex flex-col
-        ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'} 
-        border-r ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}
-        transform transition-transform duration-300 ease-in-out z-50
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 shadow-xl
-      `}>
-        <div className="flex-shrink-0 p-6 border-b border-slate-700/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg">
-                <BarsArrowUpIcon className="w-6 h-6 text-emerald-500" />
-              </div>
-              <div>
-                <h2 className={`text-xl ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                  Menu
-                </h2>
-                <p className="text-xs text-slate-400">
-                  {session.user.name}
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-1 hover:bg-slate-700/50 rounded-lg transition-colors"
-            >
-              <XMarkIcon className="w-6 h-6 text-slate-400 hover:text-slate-200" />
-            </button>
-          </div>
-        </div>
-        
-        <nav className="flex-shrink-0 p-4 space-y-2 border-b border-slate-700/50">
-          <button 
-            onClick={() => router.push('/')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl ${theme === 'dark' ? 'text-slate-300 hover:bg-slate-700/50' : 'text-slate-700 hover:bg-slate-100'} transition-all duration-200 group`}
-          >
-            <HomeIcon className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
-            <span className="font-medium">Home</span>
-          </button>
-          <button
-            onClick={handleStartNewTest}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl ${theme === "dark" ? "text-slate-300 hover:bg-slate-700/50" : "text-slate-700 hover:bg-slate-100"} transition-all duration-200 group`}
-          >
-            <ArrowPathIcon className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
-            <span className="font-medium">Take Test</span>
-          </button>
-        </nav>
+  // New Accordion-style lessons menu in main area
+  const LessonsMenu = () => (
+    <div className={`max-w-6xl mx-auto ${theme === 'dark' ? 'bg-slate-800/50' : 'bg-white'} rounded-xl shadow-lg border ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'} overflow-hidden`}>
+      <div className={`p-6 border-b ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
+        <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+          📚 Typing Mastery Journey
+        </h2>
+        <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'} mt-1`}>
+          Click on a lesson to start your training
+        </p>
+      </div>
 
-        <div className="flex-1 overflow-y-auto p-4 mb-8" style={{ scrollBehavior: 'smooth' }}>
-          <h3 className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'} uppercase tracking-wider mb-3 px-2`}>
-            Typing Mastery Journey
-          </h3>
-          <div className="space-y-2">
-            {typingLevels.map((level) => {
-              const isLevelLocked = level.id > 1 && !completedLessons.has((level.id - 1) * 5); // Unlock level when previous level's last lesson is completed
-              const isExpanded = expandedLevels.has(level.id);
-              const completedInLevel = level.subLessons.filter(lesson => completedLessons.has(lesson.id)).length;
-              const totalInLevel = level.subLessons.length;
+      <div className="divide-y divide-slate-700">
+        {typingLevels.map((level) => {
+          const isLevelLocked = level.id > 1 && !completedLessons.has((level.id - 1) * 5);
+          const isExpanded = expandedLevels.has(level.id);
+          const completedInLevel = level.subLessons.filter(lesson => completedLessons.has(lesson.id)).length;
+          const totalInLevel = level.subLessons.length;
 
-              return (
-                <div key={level.id} className="space-y-1">
-                  {/* Level Header */}
-                  <div
-                    className={`
-                      relative p-4 rounded-xl transition-all duration-200 cursor-pointer
-                      ${isLevelLocked
-                        ? `${theme === 'dark' ? 'bg-slate-800/30 border-slate-600/30' : 'bg-gray-100/30 border-gray-300/30'} opacity-60`
-                        : `${theme === 'dark' ? 'bg-slate-700/50 hover:bg-slate-700/70 border-slate-600/50' : 'bg-slate-100 hover:bg-slate-200 border-gray-200'}`
-                      }
-                      border
-                    `}
-                    onClick={() => !isLevelLocked && setExpandedLevels(prev =>
-                      prev.has(level.id)
-                        ? new Set([...prev].filter(id => id !== level.id))
-                        : new Set([...prev, level.id])
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{level.icon}</span>
-                        <div>
-                          <h4 className={`font-semibold ${isLevelLocked ? 'text-slate-500' : theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                            {level.title}
-                          </h4>
-                          <p className={`text-xs ${isLevelLocked ? 'text-slate-500' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                            {level.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          level.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                          level.color === 'blue' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                          'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                        }`}>
-                          {completedInLevel}/{totalInLevel}
-                        </span>
-
-                        {isLevelLocked && (
-                          <LockClosedIcon className="w-5 h-5 text-slate-500" />
-                        )}
-
-                        {!isLevelLocked && (
-                          <svg
-                            className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''} ${
-                              level.color === 'emerald' ? 'text-emerald-500' :
-                              level.color === 'blue' ? 'text-blue-500' : 'text-purple-500'
-                            }`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-
-                    {isLevelLocked && (
-                      <div className="mt-2 text-xs text-slate-500">
-                        Complete Beginner level to unlock
-                      </div>
-                    )}
+          return (
+            <div key={level.id} className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'}`}>
+              {/* Level Header */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  !isLevelLocked && setExpandedLevels(prev =>
+                    prev.has(level.id)
+                      ? new Set([...prev].filter(id => id !== level.id))
+                      : new Set([...prev, level.id])
+                  );
+                }}
+                className={`w-full p-4 flex items-center justify-between hover:transition-colors ${
+                  isLevelLocked
+                    ? 'opacity-60 cursor-not-allowed'
+                    : `${theme === 'dark' ? 'hover:bg-slate-700/50' : 'hover:bg-gray-50'} cursor-pointer`
+                }`}
+              >
+                <div className="flex items-center gap-4 flex-1 text-left">
+                  <span className="text-3xl">{level.icon}</span>
+                  <div>
+                    <h3 className={`font-semibold ${isLevelLocked ? 'text-slate-500' : theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+                      {level.title}
+                    </h3>
+                    <p className={`text-sm ${isLevelLocked ? 'text-slate-500' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                      {level.description}
+                    </p>
                   </div>
+                </div>
 
-                  {/* Sub-lessons */}
-                  {isExpanded && !isLevelLocked && (
-                    <div className="ml-6 space-y-2">
-                      {level.subLessons.map((lesson) => {
-                        const isLessonLocked = lesson.id > 1 && !completedLessons.has(lesson.id - 1);
-                        const isCompleted = completedLessons.has(lesson.id);
-                        const isSelected = selectedLesson?.id === lesson.id;
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                    level.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                    level.color === 'blue' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                    'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                  }`}>
+                    {completedInLevel}/{totalInLevel}
+                  </span>
 
-                        return (
-                          <div
-                            key={lesson.id}
-                            className={`
-                              relative p-3 rounded-lg transition-all duration-200 border-l-4
-                              ${isSelected
-                                ? `bg-${level.color}-500/10 border-${level.color}-500 shadow-lg`
-                                : isLessonLocked
-                                  ? `${theme === 'dark' ? 'bg-slate-800/30 border-slate-600' : 'bg-gray-100/30 border-gray-300'} opacity-60 cursor-not-allowed`
-                                  : `${theme === 'dark' ? 'bg-slate-700/20 hover:bg-slate-700/40 border-slate-600' : 'bg-slate-50 hover:bg-slate-100 border-gray-200'} cursor-pointer`
-                              }
-                            `}
-                            onClick={() => !isLessonLocked && handleLessonSelect(lesson)}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className={`text-sm font-medium ${
-                                    isSelected ? `text-${level.color}-400` :
-                                    isLessonLocked ? 'text-slate-500' :
-                                    theme === 'dark' ? 'text-slate-200' : 'text-slate-800'
-                                  }`}>
-                                    {lesson.title}
-                                  </span>
-
-                                  {isCompleted && (
-                                    <div className={`w-4 h-4 bg-${level.color}-500 rounded-full flex items-center justify-center`}>
-                                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                    </div>
-                                  )}
-
-                                  {isLessonLocked && (
-                                    <LockClosedIcon className="w-4 h-4 text-slate-500" />
-                                  )}
-                                </div>
-
-                                <p className={`text-xs ${isLessonLocked ? 'text-slate-500' : theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                                  {lesson.description}
-                                </p>
-
-                                {isSelected && (
-                                  <p className={`text-xs mt-1 text-${level.color}-400 font-medium`}>
-                                    Exercise {currentExerciseIndex + 1}/{lesson.exercises.length}
-                                  </p>
-                                )}
-
-                                {isLessonLocked && (
-                                  <p className="text-xs mt-1 text-slate-500">
-                                    Complete previous lesson to unlock
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                lesson.targetAccuracy >= 95 ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                                lesson.targetAccuracy >= 92 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                                'bg-green-500/20 text-green-400 border border-green-500/30'
-                              }`}>
-                                {lesson.targetAccuracy}%
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                  {isLevelLocked ? (
+                    <LockClosedIcon className="w-5 h-5 text-slate-500" />
+                  ) : (
+                    <svg
+                      className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''} ${
+                        level.color === 'emerald' ? 'text-emerald-500' :
+                        level.color === 'blue' ? 'text-blue-500' : 'text-purple-500'
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   )}
                 </div>
-              );
-            })}
-          </div>
-        </div>
+              </button>
+
+              {/* Lessons Grid */}
+              {isExpanded && !isLevelLocked && (
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 border-t ${theme === 'dark' ? 'border-slate-700 bg-slate-800/30' : 'border-slate-100 bg-gray-50'}`}>
+                  {level.subLessons.map((lesson) => {
+                    const isLessonLocked = lesson.id > 1 && !completedLessons.has(lesson.id - 1);
+                    const isCompleted = completedLessons.has(lesson.id);
+
+                    return (
+                      <button
+                        key={lesson.id}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          !isLessonLocked && handleLessonSelect(lesson);
+                        }}
+                        disabled={isLessonLocked}
+                        className={`p-4 rounded-lg text-left transition-all duration-200 border ${
+                          isLessonLocked
+                            ? `${theme === 'dark' ? 'bg-slate-700/20 border-slate-600/30' : 'bg-gray-100/30 border-gray-300'} opacity-60 cursor-not-allowed`
+                            : isCompleted
+                            ? `${theme === 'dark' ? 'bg-emerald-500/20 border-emerald-500 shadow-lg' : 'bg-emerald-50 border-emerald-400'}`
+                            : `${theme === 'dark' ? 'bg-slate-700/30 hover:bg-slate-700/50 border-slate-600/50' : 'bg-white hover:bg-slate-50 border-slate-200'}`
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className={`font-medium ${
+                              isLessonLocked ? 'text-slate-500' :
+                              isCompleted ? 'text-emerald-400' :
+                              theme === 'dark' ? 'text-slate-200' : 'text-slate-800'
+                            }`}>
+                              {lesson.title}
+                            </h4>
+                            <p className={`text-xs mt-1 ${
+                              isLessonLocked ? 'text-slate-500' :
+                              isCompleted ? 'text-emerald-400/70' :
+                              theme === 'dark' ? 'text-slate-400' : 'text-slate-600'
+                            }`}>
+                              {lesson.description}
+                            </p>
+                            <div className={`text-xs mt-2 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>
+                              Target: {lesson.targetAccuracy}% accuracy
+                            </div>
+                          </div>
+
+                          {isCompleted && (
+                            <div className="ml-2 flex-shrink-0">
+                              <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+
+                          {isLessonLocked && (
+                            <div className="ml-2 flex-shrink-0">
+                              <LockClosedIcon className="w-5 h-5 text-slate-500" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 
   return (
     <div className={`min-h-screen overflow-x-hidden ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'} transition-colors duration-300`}>
-      <Sidebar />
-
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className={`fixed mt-6 left-4 z-30 lg:hidden p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-800'} border ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'} shadow-lg`}
-      >
-        <Bars3Icon className="w-7 h-7 text-slate-200 hover:text-emerald-500 transition-colors duration-300 cursor-pointer" />
-      </button>
-
-      <div className="lg:ml-64 container mx-auto px-4 py-6 max-w-6xl">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Welcome Message */}
         {gameState === 'menu' && (
-          <div className="max-w-4xl mx-auto">
+          <div className="space-y-8">
             <div className="text-center mb-8">
               <h1 className={`text-4xl font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'} mb-4`}>
                 Welcome to Typing Mastery
@@ -906,8 +881,26 @@ export default function ProfessionalTypingLab() {
                 Your journey to becoming a typing expert starts here
               </p>
               <p className={`text-lg ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>
-                Use the sidebar to explore lessons and track your progress
+                Browse lessons below and select one to start training
               </p>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex gap-4 justify-center mb-8 flex-wrap">
+              <button
+                onClick={() => router.push('/')}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-medium transition-colors"
+              >
+                <HomeIcon className="w-5 h-5" />
+                Home
+              </button>
+              <button
+                onClick={handleStartNewTest}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+              >
+                <ArrowPathIcon className="w-5 h-5" />
+                Take Test
+              </button>
             </div>
 
             {/* Quick Stats */}
@@ -946,20 +939,23 @@ export default function ProfessionalTypingLab() {
               </div>
             </div>
 
+            {/* Lessons Menu */}
+            <LessonsMenu />
+
             {/* Motivational Message */}
             <div className={`p-8 rounded-xl ${theme === 'dark' ? 'bg-gradient-to-r from-emerald-500/10 to-blue-500/10' : 'bg-gradient-to-r from-emerald-50 to-blue-50'} border ${theme === 'dark' ? 'border-emerald-500/20' : 'border-emerald-200'}`}>
               <div className="text-center">
                 <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'} mb-4`}>
-                  🚀 Ready to Start Your Typing Journey?
+                  � Pro Tips
                 </h3>
                 <p className={`text-lg ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'} mb-6`}>
-                  Begin with the fundamentals and work your way up to advanced techniques.
-                  Each lesson builds on the previous one, ensuring steady progress and mastery.
+                  Expand each level to see available lessons. Complete lessons sequentially by reaching the target accuracy.
+                  Each level builds on the previous one, ensuring steady progress and mastery.
                 </p>
                 <div className="flex justify-center">
                   <div className={`px-6 py-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
                     <span className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                      💡 Tip: Start with the Beginner level in the sidebar and complete lessons sequentially
+                      ✨ Tip: Click on a level to expand it, then select a lesson to start training
                     </span>
                   </div>
                 </div>
@@ -978,12 +974,10 @@ export default function ProfessionalTypingLab() {
                   <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
                     {selectedLesson?.title}
                   </h2>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Exercise {currentExerciseIndex + 1} of {selectedLesson?.exercises.length}
-                  </p>
                 </div>
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     setShowModal(false);
                     setGameState('menu');
                   }}
@@ -1023,23 +1017,44 @@ export default function ProfessionalTypingLab() {
                         {sentence.split("").map((char, index) => {
                           const inputChar = input[index];
                           const isActive = index === input.length && stats.time > 0;
+                          
                           return (
                             <span
                               key={index}
-                              className={`
-                                relative text-4xl mx-1
-                                ${isActive ? "text-emerald-500 border-b-2 border-emerald-500" : ""}
-                                ${inputChar !== undefined
-                                  ? inputChar === char
-                                    ? theme === 'dark' ? "text-slate-300" : "text-slate-700"
-                                    : "text-rose-500"
-                                  : theme === 'dark' ? "text-slate-500" : "text-slate-400"
-                                }
-                                ${isActive ? "animate-pulse" : ""}
-                                transition-colors duration-150
-                              `}
+                              className="relative inline-block align-middle"
                             >
-                              {char}
+                              {char === ' ' ? (
+                                <span
+                                  className={`inline-flex items-center justify-center w-7 h-7 align-middle mx-0 ${
+                                    index < input.length
+                                      ? inputChar === ' '
+                                        ? 'bg-emerald-500/30 border border-emerald-400 rounded'
+                                        : 'bg-red-500/30 border border-red-400 rounded'
+                                      : isActive
+                                      ? 'bg-emerald-500/30 border-b-2 border-emerald-400 rounded'
+                                      : `${theme === 'dark' ? 'bg-slate-700/40' : 'bg-gray-300/40'} rounded`
+                                  }`}
+                                  title="Space"
+                                >
+                                </span>
+                              ) : (
+                                <span
+                                  className={`
+                                    relative text-4xl mx-0.5
+                                    ${isActive ? `${theme === 'dark' ? 'text-emerald-500' : 'text-emerald-600'} border-b-2 border-emerald-500` : ""}
+                                    ${inputChar !== undefined
+                                      ? inputChar === char
+                                        ? `${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`
+                                        : "text-red-500"
+                                      : theme === 'dark' ? "text-slate-500" : "text-slate-400"
+                                    }
+                                    ${isActive ? "animate-pulse" : ""}
+                                    transition-colors duration-150
+                                  `}
+                                >
+                                  {char}
+                                </span>
+                              )}
                             </span>
                           );
                         })}
@@ -1137,24 +1152,29 @@ export default function ProfessionalTypingLab() {
                         />
                       </div>
 
-                      <div className="flex gap-4 justify-center">
-                        {stats.accuracy >= selectedLesson?.targetAccuracy ? (
+                      <div className="flex gap-4 justify-center flex-wrap">
+                        {stats.accuracy < selectedLesson?.targetAccuracy && (
                           <ActionButton
-                            onClick={nextExercise}
-                            icon={<ArrowRightCircleIcon className="w-5 h-5" />}
-                            variant="primary"
-                          >
-                            Next Exercise
-                          </ActionButton>
-                        ) : (
-                          <ActionButton
-                            onClick={() => startExercise(selectedLesson, currentExerciseIndex)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              tryAgain();
+                            }}
                             icon={<ArrowPathIcon className="w-5 h-5" />}
-                            variant="primary"
+                            variant="secondary"
                           >
                             Try Again
                           </ActionButton>
                         )}
+                        <ActionButton
+                          onClick={(e) => {
+                            e.preventDefault();
+                            nextExercise();
+                          }}
+                          icon={<ArrowRightCircleIcon className="w-5 h-5" />}
+                          variant="primary"
+                        >
+                          Next Exercise
+                        </ActionButton>
                       </div>
                     </div>
                   </div>
@@ -1183,7 +1203,8 @@ export default function ProfessionalTypingLab() {
 
                       <div className="flex gap-4 justify-center">
                         <ActionButton
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
                             setShowModal(false);
                             setGameState('menu');
                           }}
