@@ -17,7 +17,7 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     fetchScores();
-  }, []);
+  }, [genderFilter]);
 
   useEffect(() => {
     filterScoresByGender();
@@ -36,7 +36,12 @@ export default function LeaderboardPage() {
   const fetchScores = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/scores');
+      // Pass gender as query parameter
+      const url = new URL('/api/scores', window.location.origin);
+      if (genderFilter && genderFilter !== 'all') {
+        url.searchParams.append('gender', genderFilter);
+      }
+      const response = await fetch(url.toString());
       const data = await response.json();
       
       console.log('API Response:', data);

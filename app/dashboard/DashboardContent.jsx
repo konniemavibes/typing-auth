@@ -32,11 +32,9 @@ export default function DashboardContent() {
   const [scores, setScores] = useState([]);
   const [stats, setStats] = useState({
     totalTests: 0,
-    avgWpm: 0,
-    avgAccuracy: 0,
     bestWpm: 0,
-    latestWpm: 0,
-    latestAccuracy: 0,
+    bestAccuracy: 0,
+    bestRawWpm: 0,
   });
   const [weeklyData, setWeeklyData] = useState([]);
   const [weeklyTrend, setWeeklyTrend] = useState(0);
@@ -52,6 +50,17 @@ export default function DashboardContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const fileInputRef = useRef(null);
+
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 18) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
+  };
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -80,28 +89,20 @@ export default function DashboardContent() {
         // Calculate stats
         if (scoresData.length > 0) {
           const totalTests = scoresData.length;
-          const avgWpm =
-            scoresData.reduce((sum, score) => sum + score.wpm, 0) / totalTests;
-          const avgAccuracy =
-            scoresData.reduce((sum, score) => sum + score.accuracy, 0) /
-            totalTests;
           const bestWpm = Math.max(...scoresData.map((s) => s.wpm));
-
-          // Sort scores by date (most recent first)
-          const sortedScores = scoresData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          const latestScore = sortedScores[0];
-
-          // Ensure accuracy is a valid percentage (0-100)
-          const latestAccuracy = latestScore ? Math.min(100, Math.max(0, parseFloat(latestScore.accuracy))) : 0;
-          const normalizedAvgAccuracy = Math.min(100, Math.max(0, parseFloat(avgAccuracy)));
+          const bestRawWpm = Math.max(...scoresData.map((s) => s.rawWpm || 0));
+          
+          // Get best accuracy
+          const bestAccuracy = Math.max(...scoresData.map((s) => {
+            const acc = parseFloat(s.accuracy);
+            return Math.min(100, Math.max(0, acc));
+          }));
 
           setStats({
             totalTests,
-            avgWpm: Math.round(avgWpm),
-            avgAccuracy: Math.round(normalizedAvgAccuracy * 100) / 100,
             bestWpm,
-            latestWpm: latestScore?.wpm || 0,
-            latestAccuracy: Math.round(latestAccuracy * 100) / 100,
+            bestAccuracy: Math.round(bestAccuracy * 100) / 100,
+            bestRawWpm,
           });
 
           // Calculate weekly data (last 7 days)
@@ -369,7 +370,7 @@ export default function DashboardContent() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
           <div>
             <h2 className={`text-4xl font-bold mb-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
-              Welcome back, {userData?.username || userData?.name || userData?.email}! 👋
+              {getTimeGreeting()}, {userData?.username || userData?.name || userData?.email}!
             </h2>
             <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Track your typing progress and improve your speed</p>
           </div>
@@ -391,7 +392,7 @@ export default function DashboardContent() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Total Tests */}
           <div className={`backdrop-blur-md border rounded-lg p-6 transition hover:border-emerald-500/50 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
             <div className="flex items-center justify-between">
@@ -403,23 +404,11 @@ export default function DashboardContent() {
             </div>
           </div>
 
-          {/* Average WPM */}
-          <div className={`backdrop-blur-md border rounded-lg p-6 transition hover:border-emerald-500/50 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Avg Speed</p>
-                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>{stats.avgWpm}</p>
-                <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>WPM</p>
-              </div>
-              <SparklesIcon className="w-12 h-12 text-emerald-500 opacity-30" />
-            </div>
-          </div>
-
           {/* Best WPM */}
           <div className={`backdrop-blur-md border rounded-lg p-6 transition hover:border-emerald-500/50 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Best Speed</p>
+                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Best WPM</p>
                 <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>{stats.bestWpm}</p>
                 <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>WPM</p>
               </div>
@@ -427,57 +416,44 @@ export default function DashboardContent() {
             </div>
           </div>
 
-          {/* Average Accuracy */}
+          {/* Best Accuracy */}
           <div className={`backdrop-blur-md border rounded-lg p-6 transition hover:border-emerald-500/50 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Accuracy</p>
-                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>{stats.avgAccuracy}%</p>
-                <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>Average</p>
+                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Best Accuracy</p>
+                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>{stats.bestAccuracy}%</p>
               </div>
-              <ClockIcon className="w-12 h-12 text-emerald-500 opacity-30" />
+              <SparklesIcon className="w-12 h-12 text-emerald-500 opacity-30" />
             </div>
           </div>
 
-          {/* Latest WPM */}
+          {/* Best Raw WPM */}
           <div className={`backdrop-blur-md border rounded-lg p-6 transition hover:border-emerald-500/50 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Latest Speed</p>
-                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>{stats.latestWpm}</p>
-                <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>WPM</p>
+                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Best Raw WPM</p>
+                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>{stats.bestRawWpm}</p>
+                <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>Raw</p>
               </div>
               <BoltIcon className="w-12 h-12 text-emerald-500 opacity-30" />
             </div>
           </div>
-
-          {/* Latest Accuracy */}
-          <div className={`backdrop-blur-md border rounded-lg p-6 transition hover:border-emerald-500/50 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Latest Accuracy</p>
-                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>{stats.latestAccuracy}%</p>
-                <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>Recent</p>
-              </div>
-              <ChartBarIcon className="w-12 h-12 text-emerald-500 opacity-30" />
-            </div>
-          </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Learning Buttons - Between Stats and Advanced Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Link href="/">
-            <button className={`w-full font-semibold py-3 rounded-lg transition transform hover:scale-105 ${isDark ? 'bg-emerald-600 hover:bg-emerald-700 text-slate-900' : 'bg-emerald-500 hover:bg-emerald-600 text-white'}`}>
-              Start New Test
+            <button className={`w-full font-semibold py-4 rounded-xl transition transform hover:scale-105 shadow-lg ${isDark ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white' : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white'}`}>
+              Start New Typing Test
             </button>
           </Link>
           <Link href="/Study">
-            <button className={`w-full font-semibold py-3 rounded-lg transition transform hover:scale-105 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-100' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}>
+            <button className={`w-full font-semibold py-4 rounded-xl transition transform hover:scale-105 shadow-lg ${isDark ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white' : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'}`}>
               Lessons
             </button>
           </Link>
           <Link href="/pro">
-            <button className={`w-full font-semibold py-3 rounded-lg transition transform hover:scale-105 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-100' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}>
+            <button className={`w-full font-semibold py-4 rounded-xl transition transform hover:scale-105 shadow-lg ${isDark ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white' : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white'}`}>
               Leaderboard
             </button>
           </Link>
@@ -485,7 +461,7 @@ export default function DashboardContent() {
 
         {/* Advanced Stats Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Current Speed & Accuracy Card */}
+          {/* Best Performance Card */}
           <div className={`backdrop-blur-md border rounded-lg p-8 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
             <div className="flex items-center gap-8">
               {/* Circular Progress */}
@@ -514,7 +490,7 @@ export default function DashboardContent() {
                     fill="none"
                     stroke="url(#progressGradient)"
                     strokeWidth="8"
-                    strokeDasharray={`${(stats.latestAccuracy / 100) * 339.29} 339.29`}
+                    strokeDasharray={`${(stats.bestAccuracy / 100) * 339.29} 339.29`}
                     strokeLinecap="round"
                     transform="rotate(-90 60 60)"
                   />
@@ -523,7 +499,7 @@ export default function DashboardContent() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <div className={`text-3xl font-bold ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
-                      {Math.round(stats.latestAccuracy)}%
+                      {Math.round(stats.bestAccuracy)}%
                     </div>
                   </div>
                 </div>
@@ -533,18 +509,18 @@ export default function DashboardContent() {
               <div className="flex-1 space-y-6">
                 <div>
                   <p className={`text-xs font-semibold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                    Current Speed
+                    Best Speed
                   </p>
                   <p className={`text-3xl font-bold mt-1 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
-                    {stats.latestWpm}<span className={`text-base ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>wpm</span>
+                    {stats.bestWpm}<span className={`text-base ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>wpm</span>
                   </p>
                 </div>
                 <div>
                   <p className={`text-xs font-semibold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                    Accuracy
+                    Best Accuracy
                   </p>
                   <p className={`text-3xl font-bold mt-1 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
-                    {Math.round(stats.latestAccuracy)}<span className={`text-base ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>%</span>
+                    {Math.round(stats.bestAccuracy)}<span className={`text-base ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>%</span>
                   </p>
                 </div>
               </div>
@@ -591,7 +567,7 @@ export default function DashboardContent() {
 
             <div className="mt-6 pt-6 border-t" style={{ borderColor: isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(0, 0, 0, 0.05)' }}>
               <p className={`text-sm font-semibold ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-                {Math.round(stats.avgWpm)} <span className={`font-normal ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>WPM avg</span>
+                {Math.round(stats.bestWpm)} <span className={`font-normal ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>WPM best</span>
               </p>
             </div>
           </div>
