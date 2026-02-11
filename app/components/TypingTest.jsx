@@ -8,6 +8,7 @@ import {
   ArrowPathIcon,
   UserPlusIcon,
   ArrowRightOnRectangleIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { sentences } from "../constants/sentences";
 import { MobileKeyboard } from './MobileKeyboard';
@@ -15,28 +16,7 @@ import NavBar from './Navbar';
 import { useTheme } from '../context/ThemeContext';
 
 // Animation themes for typing area
-const animationThemes = {
-  wave: {
-    name: "🌊 Wave",
-    className: "animate-wave",
-    description: "Flowing wave motion"
-  },
-  pulse: {
-    name: "💓 Pulse",
-    className: "animate-pulse-theme",
-    description: "Gentle pulsing rhythm"
-  },
-  fade: {
-    name: "✨ Fade",
-    className: "animate-fade",
-    description: "Subtle fading effect"
-  },
-  blur: {
-    name: "🌫️ Blur",
-    className: "animate-blur-focus",
-    description: "Focus blur effect"
-  }
-};
+const animationThemes = {};
 
 const StatPanel = ({ icon, value, label, unit = "", color, className = "", theme = "dark" }) => (
   <div className={`
@@ -151,7 +131,7 @@ export default function ProfessionalTypingLab() {
   const [authProvider, setAuthProvider] = useState(null);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const [userData, setUserData] = useState(null);
-  const [selectedAnimation, setSelectedAnimation] = useState('simple');
+  const [useBlurFocus, setUseBlurFocus] = useState(false);
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);
@@ -405,6 +385,20 @@ export default function ProfessionalTypingLab() {
     
   }, [sentence, endGame, startTimer, input.length, gameState, stats.time]);
 
+  const handleInputKeyDown = useCallback((e) => {
+    // Prevent page scrolling when space is pressed, but allow the character to be typed
+    if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      // Manually add space to input
+      processInput(input + ' ');
+    }
+    // Allow backspace to work properly
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      processInput(input.slice(0, -1));
+    }
+  }, [input, processInput]);
+
   const handlePhysicalInput = useCallback((e) => {
     if (gameState !== "playing" || stats.time <= 0) return;
     processInput(e.target.value);
@@ -476,26 +470,22 @@ export default function ProfessionalTypingLab() {
         {gameState === "playing" && (
           <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
             <div className="flex justify-between items-center mb-2">
-              <div className="flex items-center gap-2">
-                <span className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Animation:</span>
-                <div className="flex gap-1">
-                  {Object.entries(animationThemes).map(([key, anim]) => (
-                    <button
-                      key={key}
-                      onClick={() => setSelectedAnimation(selectedAnimation === key ? '' : key)}
-                      className={`px-3 py-1 rounded text-sm font-medium transition-all ${
-                        selectedAnimation === key
-                          ? 'bg-emerald-500 text-white shadow-lg'
-                          : theme === 'dark'
-                            ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-                            : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
-                      }`}
-                      title={anim.description}
-                    >
-                      {anim.name}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setUseBlurFocus(!useBlurFocus)}
+                  className={`flex items-center gap-2 px-3 py-1 rounded text-sm font-medium transition-all ${
+                    useBlurFocus
+                      ? 'bg-emerald-500 text-slate-900 shadow-lg'
+                      : theme === 'dark'
+                        ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                        : 'bg-slate-300 hover:bg-slate-400 text-slate-800'
+                  }`}
+                  title="Toggle Blur Focus effect"
+                >
+                  <SparklesIcon className="w-4 h-4" />
+                  Blur Focus
+                </button>
+                <span className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Space bar types spaces</span>
               </div>
               <button
                 onClick={startGame}
@@ -522,69 +512,79 @@ export default function ProfessionalTypingLab() {
               shadow-lg ${stats.time <= 0 ? 'opacity-75' : ''}
               ${isMobile ? "h-[40vh] overflow-y-auto mt-14" : "min-h-[35vh]"}
             `}>
-              <div className={`relative mt-6 ${animationThemes[selectedAnimation]?.className || ''}`}>
-                {selectedAnimation === 'blur' ? (
-                  // Blur focus rendering - by words
-                  sentence.split(" ").map((word, wordIndex) => {
-                    const wordStartIndex = sentence.split(" ").slice(0, wordIndex).join(" ").length + (wordIndex > 0 ? 1 : 0);
-                    const wordEndIndex = wordStartIndex + word.length;
-                    const isPastWord = wordEndIndex <= input.length;
-                    const isCurrentWord = input.length >= wordStartIndex && input.length < wordEndIndex;
-                    const isFutureWord = wordStartIndex > input.length;
+              <div className={`relative mt-6 font-mono text-3xl leading-relaxed`}>
+                {useBlurFocus ? (
+                  // Blur focus rendering - by words with space detection
+                  <>
+                    {sentence.split(" ").map((word, wordIndex) => {
+                      const wordStartIndex = sentence.split(" ").slice(0, wordIndex).join(" ").length + (wordIndex > 0 ? 1 : 0);
+                      const wordEndIndex = wordStartIndex + word.length;
+                      const isPastWord = wordEndIndex <= input.length;
+                      const isCurrentWord = input.length >= wordStartIndex && input.length < wordEndIndex;
+                      const isFutureWord = wordStartIndex > input.length;
 
-                    // Find the current word index more accurately
-                    let currentWordIndex = 0;
-                    const words = sentence.split(" ");
-                    let charCount = 0;
-                    for (let i = 0; i < words.length; i++) {
-                      charCount += words[i].length + (i > 0 ? 1 : 0); // +1 for space
-                      if (input.length < charCount) {
-                        currentWordIndex = i;
-                        break;
+                      // Find the current word index more accurately
+                      let currentWordIndex = 0;
+                      const words = sentence.split(" ");
+                      let charCount = 0;
+                      for (let i = 0; i < words.length; i++) {
+                        charCount += words[i].length + (i > 0 ? 1 : 0); // +1 for space
+                        if (input.length < charCount) {
+                          currentWordIndex = i;
+                          break;
+                        }
                       }
-                    }
 
-                    const isNextWord = wordIndex === currentWordIndex + 1;
-                    const shouldBlur = isFutureWord && wordIndex > currentWordIndex + 1;
+                      const isNextWord = wordIndex === currentWordIndex + 1;
+                      const shouldBlur = isFutureWord && wordIndex > currentWordIndex + 1;
 
-                    return (
-                      <span
-                        key={wordIndex}
-                        className={`
-                          relative inline-block mr-1
-                          ${shouldBlur ? 'blur-future' : 'blur-clear'}
-                          ${stats.time <= 0 ? 'opacity-75' : ''}
-                        `}
-                      >
-                        {word.split("").map((char, charIndex) => {
-                          const globalIndex = wordStartIndex + charIndex;
-                          const inputChar = input[globalIndex];
-                          const isActive = globalIndex === input.length && stats.time > 0;
-                          return (
-                            <span
-                              key={charIndex}
-                              className={`
-                                relative
-                                ${isActive ? "text-emerald-500 border-b-2 border-emerald-500" : ""}
-                                ${inputChar !== undefined
-                                  ? inputChar === char
-                                    ? theme === 'dark' ? "text-slate-300" : "text-slate-700"
-                                    : "text-rose-500"
-                                  : theme === 'dark' ? "text-slate-500" : "text-slate-400"
-                                }
-                                ${isActive ? "animate-pulse" : ""}
-                                transition-colors duration-150
-                              `}
-                            >
-                              {char}
+                      return (
+                        <span key={wordIndex} className={`relative inline-block ${shouldBlur ? 'blur-future' : 'blur-clear'} ${stats.time <= 0 ? 'opacity-75' : ''}`}>
+                          {word.split("").map((char, charIndex) => {
+                            const globalIndex = wordStartIndex + charIndex;
+                            const inputChar = input[globalIndex];
+                            const isActive = globalIndex === input.length && stats.time > 0;
+                            return (
+                              <span
+                                key={charIndex}
+                                className={`relative inline-block align-middle ${isActive ? "text-emerald-500 border-b-2 border-emerald-500" : ""} ${
+                                  inputChar !== undefined
+                                    ? inputChar === char
+                                      ? theme === 'dark' ? "text-slate-300" : "text-slate-700"
+                                      : "text-rose-500"
+                                    : theme === 'dark' ? "text-slate-500" : "text-slate-400"
+                                } ${isActive ? "animate-pulse" : ""} transition-colors duration-150`}
+                              >
+                                {char}
+                              </span>
+                            );
+                          })}
+                          {wordIndex < words.length - 1 && (
+                            <span className="inline-block align-middle">
+                              {(() => {
+                                const spaceIndex = wordEndIndex;
+                                const spaceChar = input[spaceIndex];
+                                const isActive = spaceIndex === input.length && stats.time > 0;
+                                return (
+                                  <span className={`inline-flex items-center justify-center w-5 h-5 align-middle mx-0.5 ${
+                                    isActive
+                                      ? 'bg-emerald-500/30 border border-emerald-400 rounded'
+                                      : spaceChar !== undefined
+                                      ? spaceChar === ' '
+                                        ? 'bg-emerald-500/30 border border-emerald-400 rounded'
+                                        : 'bg-red-500/30 border border-red-400 rounded'
+                                      : 'bg-slate-700/40 rounded'
+                                  }`} title="Space"></span>
+                                );
+                              })()}
                             </span>
-                          );
-                        })}
-                      </span>
-                    );
-                  })
+                          )}
+                        </span>
+                      );
+                    })}
+                  </>
                 ) : (
-                  // Normal character-by-character rendering
+                  // Normal character-by-character rendering with space detection
                   sentence.split("").map((char, index) => {
                     const inputChar = input[index];
                     const isActive = index === input.length && stats.time > 0;
@@ -592,20 +592,41 @@ export default function ProfessionalTypingLab() {
                       <span
                         key={index}
                         className={`
-                          relative
-                          ${isActive ? "text-emerald-500 border-b-2 border-emerald-500" : ""}
-                          ${inputChar !== undefined
-                            ? inputChar === char
-                              ? theme === 'dark' ? "text-slate-300" : "text-slate-700"
-                              : "text-rose-500"
-                            : theme === 'dark' ? "text-slate-500" : "text-slate-400"
+                          relative inline-block align-middle ${
+                            isActive
+                              ? 'bg-emerald-500/30'
+                              : ''
                           }
-                          ${isActive ? "animate-pulse" : ""}
-                          ${stats.time <= 0 ? 'opacity-75' : ''}
-                          transition-colors duration-150
                         `}
                       >
-                        {char}
+                        {char === ' ' ? (
+                          <span className={`inline-flex items-center justify-center w-5 h-5 align-middle mx-0.5 ${
+                            isActive
+                              ? 'bg-emerald-500/30 border border-emerald-400 rounded'
+                              : inputChar !== undefined
+                              ? inputChar === ' '
+                                ? 'bg-emerald-500/30 border border-emerald-400 rounded'
+                                : 'bg-red-500/30 border border-red-400 rounded'
+                              : 'bg-slate-700/40 rounded'
+                          }`} title="Space"></span>
+                        ) : (
+                          <span
+                            className={`
+                              relative
+                              ${isActive ? "text-emerald-500 border-b-2 border-emerald-500" : ""}
+                              ${inputChar !== undefined
+                                ? inputChar === char
+                                  ? theme === 'dark' ? "text-slate-300" : "text-slate-700"
+                                  : "text-rose-500"
+                                : theme === 'dark' ? "text-slate-500" : "text-slate-400"
+                              }
+                              ${isActive ? "animate-pulse" : ""}
+                              transition-colors duration-150
+                            `}
+                          >
+                            {char}
+                          </span>
+                        )}
                       </span>
                     );
                   })
@@ -616,6 +637,7 @@ export default function ProfessionalTypingLab() {
                 type="text"
                 value={input}
                 onChange={handlePhysicalInput}
+                onKeyDown={handleInputKeyDown}
                 className="absolute inset-0 opacity-0 cursor-text"
                 disabled={stats.time <= 0}
                 autoFocus

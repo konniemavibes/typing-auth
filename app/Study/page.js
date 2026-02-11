@@ -429,6 +429,7 @@ export default function ProfessionalTypingLab() {
   const [showModal, setShowModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedLevels, setExpandedLevels] = useState(new Set([1])); // Beginner level starts expanded
+  const [loadingProgress, setLoadingProgress] = useState(true);
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);
@@ -448,22 +449,31 @@ export default function ProfessionalTypingLab() {
     }
   }, []);
 
-  // Load progress from localStorage
+  // Load progress from database
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedProgress = localStorage.getItem('typing-lessons-progress');
-      if (savedProgress) {
-        setCompletedLessons(new Set(JSON.parse(savedProgress)));
+    const fetchProgress = async () => {
+      try {
+        const response = await fetch('/api/lessons');
+        if (response.ok) {
+          const data = await response.json();
+          setCompletedLessons(new Set(data.completedLessons));
+        }
+      } catch (error) {
+        console.error('Error loading lesson progress:', error);
+        // Fallback to localStorage if API fails
+        if (typeof window !== 'undefined') {
+          const savedProgress = localStorage.getItem('typing-lessons-progress');
+          if (savedProgress) {
+            setCompletedLessons(new Set(JSON.parse(savedProgress)));
+          }
+        }
+      } finally {
+        setLoadingProgress(false);
       }
-    }
-  }, []);
+    };
 
-  // Save progress to localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('typing-lessons-progress', JSON.stringify([...completedLessons]));
-    }
-  }, [completedLessons]);
+    fetchProgress();
+  }, []);
 
   const handleLessonSelect = (lesson) => {
     if (lesson.id > 1 && !completedLessons.has(lesson.id - 1)) {
@@ -508,6 +518,22 @@ export default function ProfessionalTypingLab() {
     return finalAccuracy >= lesson.targetAccuracy;
   };
 
+  const saveLessonCompletion = async (lessonId) => {
+    try {
+      const response = await fetch('/api/lessons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonId })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to save lesson completion');
+      }
+    } catch (error) {
+      console.error('Error saving lesson to database:', error);
+    }
+  };
+
   const tryAgain = () => {
     if (!selectedLesson) return;
     startExercise(selectedLesson, currentExerciseIndex);
@@ -523,6 +549,7 @@ export default function ProfessionalTypingLab() {
     } else {
       // Lesson completed
       setCompletedLessons(prev => new Set([...prev, selectedLesson.id]));
+      saveLessonCompletion(selectedLesson.id);
       setGameState('lesson-complete');
       // Play completion sound
       setTimeout(() => {
@@ -600,6 +627,7 @@ export default function ProfessionalTypingLab() {
     // Check if lesson is completed (all exercises done)
     if (selectedLesson && currentExerciseIndex >= selectedLesson.exercises.length - 1) {
       setCompletedLessons(prev => new Set([...prev, selectedLesson.id]));
+      saveLessonCompletion(selectedLesson.id);
     }
 
     setGameState("results");
@@ -896,7 +924,7 @@ export default function ProfessionalTypingLab() {
               </button>
               <button
                 onClick={handleStartNewTest}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-emerald-50 font-medium transition-colors shadow-lg hover:shadow-xl"
               >
                 <ArrowPathIcon className="w-5 h-5" />
                 Take Test
