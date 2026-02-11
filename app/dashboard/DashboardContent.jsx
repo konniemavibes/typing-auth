@@ -212,9 +212,13 @@ export default function DashboardContent() {
   };
 
   if (status === 'loading' || loading) {
+    const isDarkMode = theme === 'dark';
     return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
-        <div className="text-gray-900 dark:text-white text-xl">Loading...</div>
+      <div className={`min-h-screen transition-colors duration-300 flex items-center justify-center ${isDarkMode ? 'bg-slate-900' : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'}`}>
+        <div className="flex flex-col items-center gap-4">
+          <div className={`w-12 h-12 rounded-full border-4 border-t-emerald-500 animate-spin ${isDarkMode ? 'border-slate-700' : 'border-gray-200'}`}></div>
+          <p className={isDarkMode ? 'text-slate-400' : 'text-gray-600'}>Loading dashboard...</p>
+        </div>
       </div>
     );
   }

@@ -17,7 +17,7 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     fetchScores();
-  }, [genderFilter]);
+  }, []);
 
   useEffect(() => {
     filterScoresByGender();
@@ -36,28 +36,14 @@ export default function LeaderboardPage() {
   const fetchScores = async () => {
     try {
       setLoading(true);
-      // Pass gender as query parameter
-      const url = new URL('/api/scores', window.location.origin);
-      if (genderFilter && genderFilter !== 'all') {
-        url.searchParams.append('gender', genderFilter);
-      }
-      const response = await fetch(url.toString());
+      const response = await fetch('/api/scores');
       const data = await response.json();
       
-      console.log('API Response:', data);
-      
       if (!response.ok) {
-        console.error('API Error:', response.status, data);
         throw new Error(data.error || `HTTP Error: ${response.status}`);
       }
       
       const scoresData = data.data || [];
-      console.log('Scores data received:', scoresData);
-      
-      if (scoresData.length > 0) {
-        console.log('Sample score:', scoresData[0]);
-      }
-      
       const uniqueUserScores = processUniqueHighestScores(scoresData);
       
       // Split by gender and take top 20 of each
@@ -68,8 +54,6 @@ export default function LeaderboardPage() {
       const females = uniqueUserScores
         .filter(score => score.user?.gender?.toLowerCase() === 'female')
         .slice(0, 20);
-      
-      console.log('Males:', males.length, 'Females:', females.length);
       
       setScores(uniqueUserScores);
       setMaleScores(males);

@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
 import { sentences } from '../../constants/sentences';
 import { authOptions } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 function generateRoomCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
