@@ -4,7 +4,10 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
   try {
-    const { username, email, password, gender } = await request.json();
+    let { username, email, password, gender } = await request.json();
+
+    // Normalize email: trim whitespace and convert to lowercase
+    email = email.trim().toLowerCase();
 
     // Validate input
     if (!username || !email || !password || !gender) {
@@ -51,15 +54,16 @@ export async function POST(request) {
       },
     });
 
+    // Don't return password
+    const { password: _, ...userWithoutPassword } = user;
+    
     return NextResponse.json({ 
       success: true, 
-      user 
+      user: userWithoutPassword 
     });
   } catch (error) {
-    console.error('Signup error:', error.message);
-    console.error('Full error:', error);
     return NextResponse.json(
-      { error: 'Failed to create account', details: error.message },
+      { error: 'Failed to create account' },
       { status: 500 }
     );
   }

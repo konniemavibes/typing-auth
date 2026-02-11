@@ -4,7 +4,10 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
   try {
-    const { email, password } = await request.json();
+    let { email, password } = await request.json();
+
+    // Normalize email: trim whitespace and convert to lowercase
+    email = email.trim().toLowerCase();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -50,7 +53,6 @@ export async function POST(request) {
       user: userWithoutPassword
     });
   } catch (error) {
-    console.error('Login error:', error);
     return NextResponse.json(
       { error: 'Failed to login' },
       { status: 500 }
