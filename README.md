@@ -112,3 +112,5 @@ For detailed instructions, check out the [Next.js deployment documentation](http
 **Happy Typing! ⌨️✨**
 
 If you found this project helpful, please give it a ⭐️!
+
+** Cheking for the pushing updates**
