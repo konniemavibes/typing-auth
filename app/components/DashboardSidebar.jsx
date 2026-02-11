@@ -21,6 +21,8 @@ import {
   TrophyIcon,
 } from "@heroicons/react/24/outline";
 import { MdMenuBook as MenuIcon } from "react-icons/md";
+import { GiMusicalKeyboard } from "react-icons/gi";
+import { IoMusicalNote } from "react-icons/io5";
 
 const musicTracks = ["/run.mp3", "/auraox.mp3", "/whois.mp3"];
 
@@ -36,6 +38,7 @@ export default function DashboardSidebar({ isDark, onClose, isOpen }) {
   const [currentTrack, setCurrentTrack] = useState(0);
   const [volume, setVolume] = useState(0.5);
   const [showMusicControls, setShowMusicControls] = useState(false);
+  const [showMelodyModal, setShowMelodyModal] = useState(false);
   
   // User menu state
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -47,25 +50,59 @@ export default function DashboardSidebar({ isDark, onClose, isOpen }) {
   
   const togglePlayback = () => {
     if (isPlaying) {
-      audioRef.current.pause();
+      audioRef.current?.pause();
     } else {
-      audioRef.current.play();
+      const playPromise = audioRef.current?.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Playback failed:', error);
+        });
+      }
     }
     setIsPlaying(!isPlaying);
   };
 
   const handleVolume = (e) => {
     const newVolume = parseFloat(e.target.value);
-    audioRef.current.volume = newVolume;
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
     setVolume(newVolume);
   };
 
   const changeTrack = (index) => {
+    if (index >= musicTracks.length || !audioRef.current) return;
+    
     setCurrentTrack(index);
     audioRef.current.src = musicTracks[index];
+    audioRef.current.load();
+    
     if (isPlaying) {
-      audioRef.current.play();
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Playback failed:', error);
+        });
+      }
     }
+  };
+
+  const handleMelodyOneClick = () => {
+    if (!audioRef.current) return;
+    
+    setCurrentTrack(0);
+    audioRef.current.src = musicTracks[0];
+    audioRef.current.load();
+    
+    const playPromise = audioRef.current.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        setIsPlaying(true);
+      }).catch(error => {
+        console.error('Playback failed:', error);
+      });
+    }
+    setShowMelodyModal(true);
   };
   
   useEffect(() => {
@@ -98,6 +135,28 @@ export default function DashboardSidebar({ isDark, onClose, isOpen }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Initialize audio and set up handlers
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    // Set initial volume
+    audioRef.current.volume = volume;
+
+    // Handle track ended - play next melody
+    const handleTrackEnd = () => {
+      const nextTrackIndex = (currentTrack + 1) % musicTracks.length;
+      changeTrack(nextTrackIndex);
+    };
+
+    audioRef.current.addEventListener('ended', handleTrackEnd);
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('ended', handleTrackEnd);
+      }
+    };
+  }, [currentTrack]);
 
   const navItems = [
     {
@@ -176,10 +235,11 @@ export default function DashboardSidebar({ isDark, onClose, isOpen }) {
             {/* Music Toggle */}
             <div className="relative flex-1">
               <button 
-                onClick={() => setShowMusicControls(!showMusicControls)}
-                className={`w-full p-2 rounded-lg transition ${isDark ? "bg-slate-800 hover:bg-slate-700 text-slate-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
+                onClick={handleMelodyOneClick}
+                className={`w-full p-2 rounded-lg transition flex items-center gap-2 ${isDark ? "bg-slate-800 hover:bg-slate-700 text-slate-300" : "bg-gray-100 hover:bg-gray-200 text-gray-700"}`}
               >
-                {isPlaying ? <SpeakerWaveIcon className="w-5 h-5 text-emerald-500" /> : <SpeakerXMarkIcon className="w-5 h-5" />}
+                <IoMusicalNote className="w-5 h-5 text-emerald-500" />
+                <span className="text-sm font-medium">Melody One</span>
               </button>
               
               {showMusicControls && (
@@ -290,7 +350,70 @@ export default function DashboardSidebar({ isDark, onClose, isOpen }) {
         </div>
       </aside>
 
+      {/* Melody Selection Modal */}
+      {showMelodyModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className={`rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
+            <h3 className={`text-2xl font-bold mb-6 flex items-center gap-3 ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
+              Select Melody
+            </h3>
+            
+            {/* Volume Control */}
+            <div className="mb-6">
+              <div className={`text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                Volume: {Math.round(volume * 100)}%
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="1" 
+                step="0.1" 
+                value={volume} 
+                onChange={handleVolume}
+                className="w-full h-2 bg-gray-300 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 mb-6">
+              {['Melody One', 'Melody Two', 'Melody Three', 'Melody Four'].map((name, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    if (index < musicTracks.length) {
+                      changeTrack(index);
+                      setIsPlaying(true);
+                    }
+                  }}
+                  className={`p-3 rounded-lg transition font-medium ${
+                    currentTrack === index && index < musicTracks.length
+                      ? 'bg-emerald-500 text-white shadow-lg'
+                      : isDark
+                        ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  } ${index >= musicTracks.length ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  disabled={index >= musicTracks.length}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowMelodyModal(false)}
+              className={`w-full p-3 rounded-lg transition font-medium ${
+                isDark
+                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
+              }`}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       <audio ref={audioRef} src={musicTracks[currentTrack]} loop={true} />
     </>
   );
 }
+
+
