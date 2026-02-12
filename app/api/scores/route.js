@@ -107,7 +107,10 @@ export async function GET(request) {
       });
     }
 
-    return NextResponse.json({ data: scores }, { status: 200 });
+    // Filter out scores with null users (orphaned records)
+    const validScores = scores.filter(score => score.user !== null);
+
+    return NextResponse.json({ data: validScores }, { status: 200 });
   } catch (error) {
     console.error('Score fetch error:', error);
     return NextResponse.json(

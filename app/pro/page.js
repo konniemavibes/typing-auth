@@ -1,6 +1,6 @@
   "use client";
 import { useState, useEffect } from 'react';
-import { TrophyIcon, ClockIcon, ChartBarIcon, ArrowPathIcon, UserIcon, ArrowTrendingUpIcon, RocketLaunchIcon, UserGroupIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, ClockIcon, ChartBarIcon, ArrowPathIcon, UserIcon, ArrowTrendingUpIcon, RocketLaunchIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import TrueFocus from '../pro/TrueFocus';
 import SkeletonLoader from '../components/SkeletonLoader';
@@ -97,7 +97,7 @@ export default function LeaderboardPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
         <div className="text-rose-500 text-center">
           <p className="text-xl font-semibold">Error loading leaderboard</p>
           <p className="mt-2">{error}</p>
@@ -113,44 +113,43 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-8 px-4">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl text-slate-200 flex items-center justify-center gap-3">
-            <RocketLaunchIcon className="w-10 h-10 text-emerald-500 mr-5 animate-bounce" />
+          <h1 className="text-3xl md:text-4xl text-slate-100 flex items-center justify-center gap-3 mb-2">
+            <RocketLaunchIcon className="w-10 h-10 text-emerald-500 animate-bounce" />
             <TrueFocus />
           </h1>
-          <br />
           <p className="text-slate-400 mt-2">Top speeds and highest accuracy</p>
           
           {/* Gender Filter Buttons */}
-          <div className="flex justify-center gap-3 mt-6 mb-6">
+          <div className="flex justify-center gap-3 mt-6 mb-6 flex-wrap">
             <button
               onClick={() => setGenderFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-6 py-2 rounded-lg font-medium transition-all ${
                 genderFilter === 'all'
-                  ? 'bg-emerald-500 text-slate-900'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  ? 'bg-emerald-500 text-slate-900 shadow-lg shadow-emerald-500/50'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
             >
               All
             </button>
             <button
               onClick={() => setGenderFilter('male')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-6 py-2 rounded-lg font-medium transition-all ${
                 genderFilter === 'male'
-                  ? 'bg-emerald-500 text-slate-900'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  ? 'bg-emerald-500 text-slate-900 shadow-lg shadow-emerald-500/50'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
             >
               Male
             </button>
             <button
               onClick={() => setGenderFilter('female')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-6 py-2 rounded-lg font-medium transition-all ${
                 genderFilter === 'female'
-                  ? 'bg-emerald-500 text-slate-900'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  ? 'bg-emerald-500 text-slate-900 shadow-lg shadow-emerald-500/50'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
             >
               Female
@@ -160,7 +159,7 @@ export default function LeaderboardPage() {
           <button
             onClick={handleStartNewTest}
             className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-slate-900 
-                     rounded-lg hover:bg-emerald-600 transition-colors font-medium"
+                     rounded-lg hover:bg-emerald-600 transition-all font-medium shadow-lg shadow-emerald-500/30"
           >
             <ArrowPathIcon className="w-5 h-5" />
             Take Another Test
@@ -172,74 +171,242 @@ export default function LeaderboardPage() {
         ) : filteredScores.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-slate-400 text-lg">No scores available for this filter. Be the first to set a record!</p>
-            <p className="text-slate-500 text-sm mt-2">Total users: {scores.length} (Males: {maleScores.length}, Females: {femaleScores.length})</p>
           </div>
         ) : (
           <>
-            <div className="mb-6 flex justify-center items-center gap-4">
-              <div className="text-center">
-                <p className="text-emerald-400 text-2xl font-bold">{filteredScores.length}</p>
-                <p className="text-slate-400 text-sm">Champion{filteredScores.length !== 1 ? 's' : ''}</p>
-              </div>
-            </div>
-
-            {/* Leaderboard Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {filteredScores.map((score, index) => (
-                <div
-                  key={`${score.id}-${index}`}
-                  className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg overflow-hidden border border-slate-700/50 hover:border-emerald-500/50 transition-all hover:shadow-lg hover:shadow-emerald-500/10"
-                >
-                  {/* Rank Badge */}
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1 rounded-bl-lg font-bold">
-                    #{index + 1}
-                  </div>
-
-                  {/* Profile Image */}
-                  <div className="relative h-40 bg-gradient-to-b from-slate-700 to-slate-800 flex items-center justify-center overflow-hidden">
-                    {score.user?.image ? (
-                      <img
-                        src={score.user.image}
-                        alt={score.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                        <UserIcon className="w-24 h-24 text-slate-800" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* User Info */}
-                  <div className="p-4">
-                    <h3 className="text-lg font-bold text-slate-100 truncate mb-1">{score.name}</h3>
-                    {score.user?.gender && (
-                      <p className="text-xs text-emerald-400 capitalize mb-3 font-medium">
-                        {score.user.gender === 'male' ? '♂ Male' : '♀ Female'}
-                      </p>
-                    )}
-
-                    {/* Stats */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between bg-slate-700/50 rounded p-2">
-                        <div className="flex items-center gap-2 text-slate-300">
-                          <ClockIcon className="w-4 h-4 text-emerald-400" />
-                          <span className="text-sm">WPM</span>
+            {/* Top 3 Winners Podium */}
+            {filteredScores.length >= 1 && (
+              <div className="grid grid-cols-3 gap-4 mb-12">
+                {/* Second Place */}
+                {filteredScores.length >= 2 && (
+                  <div className="order-1 pt-10">
+                    <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-t-2xl p-6 border-2 border-slate-600/50 text-center transform transition-all hover:translate-y-1 hover:border-emerald-500/50">
+                      <div className="flex justify-center">
+                        <div className="relative">
+                          {filteredScores[1].user?.image ? (
+                            <img
+                              src={filteredScores[1].user.image}
+                              alt={filteredScores[1].name}
+                              className="w-20 h-20 rounded-full -mt-14 border-4 border-slate-800 shadow-lg object-cover"
+                            />
+                          ) : (
+                            <div className="bg-slate-400 rounded-full w-20 h-20 flex items-center justify-center -mt-14 border-4 border-slate-800 shadow-lg">
+                              <UserIcon className="w-10 h-10 text-slate-900" />
+                            </div>
+                          )}
+                          <div className="absolute -top-2 right-0 bg-slate-400 rounded-full p-2 border-2 border-slate-800">
+                            <TrophyIcon className="w-5 h-5 text-slate-900" />
+                          </div>
                         </div>
-                        <span className="text-lg font-bold text-emerald-400">{score.wpm}</span>
                       </div>
-                      <div className="flex items-center justify-between bg-slate-700/50 rounded p-2">
-                        <div className="flex items-center gap-2 text-slate-300">
-                          <ChartBarIcon className="w-4 h-4 text-blue-400" />
-                          <span className="text-sm">Accuracy</span>
+                      <h3 className="text-lg font-semibold text-slate-300 mt-4 truncate">{filteredScores[1].name}</h3>
+                      {filteredScores[1].user?.gender && (
+                        <p className="text-xs text-emerald-400 capitalize mt-1">
+                          {filteredScores[1].user.gender === 'male' ? '♂ Male' : '♀ Female'}
+                        </p>
+                      )}
+                      <div className="flex justify-center space-x-4 mt-3">
+                        <div className="text-sm text-slate-400">
+                          <ClockIcon className="w-4 h-4 inline mr-1" />
+                          <span className="font-medium text-slate-300">{filteredScores[1].wpm} WPM</span>
                         </div>
-                        <span className="text-lg font-bold text-blue-400">{score.accuracy}%</span>
+                        <div className="text-sm text-slate-400">
+                          <ChartBarIcon className="w-4 h-4 inline mr-1" />
+                          <span className="font-medium text-slate-300">{Math.round(filteredScores[1].accuracy)}%</span>
+                        </div>
+                      </div>
+                      <div className="h-8 bg-slate-700 mt-4 mb-2 rounded"></div>
+                    </div>
+                    <div className="text-center text-lg font-bold text-slate-400">2ND</div>
+                  </div>
+                )}
+
+                {/* First Place */}
+                <div className={`${filteredScores.length >= 2 ? 'order-0' : ''}`}>
+                  <div className="bg-gradient-to-br from-yellow-600/20 to-slate-900/90 rounded-t-2xl p-6 border-2 border-yellow-500/50 text-center transform transition-all hover:translate-y-1">
+                    <div className="flex justify-center">
+                      <div className="relative">
+                        {filteredScores[0].user?.image ? (
+                          <img
+                            src={filteredScores[0].user.image}
+                            alt={filteredScores[0].name}
+                            className="w-24 h-24 rounded-full -mt-16 border-4 border-slate-800 shadow-lg object-cover"
+                          />
+                        ) : (
+                          <div className="bg-yellow-500 rounded-full w-24 h-24 flex items-center justify-center -mt-16 border-4 border-slate-800 shadow-lg">
+                            <UserIcon className="w-12 h-12 text-slate-900" />
+                          </div>
+                        )}
+                        <div className="absolute -top-2 right-0 bg-yellow-500 rounded-full p-3 border-2 border-slate-800">
+                          <TrophyIcon className="w-6 h-6 text-slate-900" />
+                        </div>
                       </div>
                     </div>
+                    <h3 className="text-2xl font-bold text-yellow-500 mt-4 truncate">{filteredScores[0].name}</h3>
+                    {filteredScores[0].user?.gender && (
+                      <p className="text-xs text-yellow-400 capitalize mt-1">
+                        {filteredScores[0].user.gender === 'male' ? '♂ Male' : '♀ Female'}
+                      </p>
+                    )}
+                    <div className="flex justify-center space-x-4 mt-3">
+                      <div className="text-sm text-slate-400">
+                        <ClockIcon className="w-4 h-4 inline mr-1" />
+                        <span className="font-medium text-yellow-500">{filteredScores[0].wpm} WPM</span>
+                      </div>
+                      <div className="text-sm text-slate-400">
+                        <ChartBarIcon className="w-4 h-4 inline mr-1" />
+                        <span className="font-medium text-yellow-500">{Math.round(filteredScores[0].accuracy)}%</span>
+                      </div>
+                    </div>
+                    <div className="h-16 bg-yellow-900/30 mt-4 mb-2 rounded"></div>
                   </div>
+                  <div className="text-center text-2xl font-bold text-yellow-500">1ST</div>
                 </div>
-              ))}
-            </div>
+
+                {/* Third Place */}
+                {filteredScores.length >= 3 && (
+                  <div className="order-2 pt-14">
+                    <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-t-2xl p-5 border-2 border-amber-700/50 text-center transform transition-all hover:translate-y-1 hover:border-emerald-500/50">
+                      <div className="flex justify-center">
+                        <div className="relative">
+                          {filteredScores[2].user?.image ? (
+                            <img
+                              src={filteredScores[2].user.image}
+                              alt={filteredScores[2].name}
+                              className="w-18 h-18 rounded-full -mt-12 border-4 border-slate-800 shadow-lg object-cover"
+                            />
+                          ) : (
+                            <div className="bg-amber-700 rounded-full w-18 h-18 flex items-center justify-center -mt-12 border-4 border-slate-800 shadow-lg">
+                              <UserIcon className="w-8 h-8 text-slate-900" />
+                            </div>
+                          )}
+                          <div className="absolute -top-1 right-0 bg-amber-700 rounded-full p-2 border-2 border-slate-800">
+                            <TrophyIcon className="w-4 h-4 text-slate-900" />
+                          </div>
+                        </div>
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-300 mt-3 truncate">{filteredScores[2].name}</h3>
+                      {filteredScores[2].user?.gender && (
+                        <p className="text-xs text-emerald-400 capitalize mt-1">
+                          {filteredScores[2].user.gender === 'male' ? '♂ Male' : '♀ Female'}
+                        </p>
+                      )}
+                      <div className="flex justify-center space-x-4 mt-3">
+                        <div className="text-sm text-slate-400">
+                          <ClockIcon className="w-4 h-4 inline mr-1" />
+                          <span className="font-medium text-slate-300">{filteredScores[2].wpm} WPM</span>
+                        </div>
+                        <div className="text-sm text-slate-400">
+                          <ChartBarIcon className="w-4 h-4 inline mr-1" />
+                          <span className="font-medium text-slate-300">{Math.round(filteredScores[2].accuracy)}%</span>
+                        </div>
+                      </div>
+                      <div className="h-4 bg-slate-700 mt-4 mb-2 rounded"></div>
+                    </div>
+                    <div className="text-center text-lg font-bold text-amber-700">3RD</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Remaining Top Scores */}
+            {filteredScores.length > 3 && (
+              <div className="bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-700/30 backdrop-blur">
+                <div className="overflow-x-auto">
+                  {/* Mobile View */}
+                  <div className="block sm:hidden">
+                    {filteredScores.slice(3).map((score, index) => (
+                      <div key={`${score.id}-${index}`} className="p-4 border-b border-slate-700/50 hover:bg-emerald-500/10 transition-colors">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-700 text-sm font-semibold text-slate-300">
+                            {index + 4}
+                          </span>
+                          {score.user?.image ? (
+                            <img src={score.user.image} alt={score.name} className="w-8 h-8 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                              <UserIcon className="w-4 h-4 text-emerald-400" />
+                            </div>
+                          )}
+                          <span className="font-medium text-slate-300 truncate">{score.name}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm ml-11">
+                          <div>
+                            <span className="text-slate-500">WPM:</span>
+                            <span className="ml-2 text-emerald-400 font-semibold">{score.wpm}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500">Accuracy:</span>
+                            <span className="ml-2 text-blue-400 font-semibold">{Math.round(score.accuracy)}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop View */}
+                  <table className="w-full hidden sm:table">
+                    <thead>
+                      <tr className="border-b border-slate-700/50 bg-slate-900/50">
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-400">
+                          <div className="flex items-center gap-2">
+                            <ArrowTrendingUpIcon className="w-4 h-4" />
+                            Rank
+                          </div>
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-400">
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="w-4 h-4" />
+                            Name
+                          </div>
+                        </th>
+                        <th className="px-6 py-4 text-right text-sm font-semibold text-slate-400">
+                          <div className="flex items-center gap-2 justify-end">
+                            <ClockIcon className="w-4 h-4" />
+                            WPM
+                          </div>
+                        </th>
+                        <th className="px-6 py-4 text-right text-sm font-semibold text-slate-400">
+                          <div className="flex items-center gap-2 justify-end">
+                            <ChartBarIcon className="w-4 h-4" />
+                            Accuracy
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/30">
+                      {filteredScores.slice(3).map((score, index) => (
+                        <tr key={`${score.id}-${index}`} className="hover:bg-emerald-500/10 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-700/50 font-semibold text-slate-300">
+                              {index + 4}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              {score.user?.image ? (
+                                <img src={score.user.image} alt={score.name} className="w-8 h-8 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                  <UserIcon className="w-4 h-4 text-emerald-400" />
+                                </div>
+                              )}
+                              <span className="font-medium text-slate-300 truncate">{score.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="text-emerald-400 font-bold">{score.wpm}</span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="text-blue-400 font-bold">{Math.round(score.accuracy)}%</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -438,14 +438,17 @@ export default function ProfessionalTypingLab() {
   const totalCharsTypedRef = useRef(0);
   const correctCharsRef = useRef(0);
   const hasSubmittedRef = useRef(false);
-  const audioRef = useRef(null);
 
   const completionSoundRef = useRef(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      audioRef.current = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
-      completionSoundRef.current = new Audio('https://www.soundjay.com/sounds/success-fanfare-trumpets-01.mp3');
+      const audio = new Audio();
+      audio.src = 'https://www.soundjay.com/sounds/success-fanfare-trumpets-01.mp3';
+      audio.crossOrigin = 'anonymous';
+      audio.preload = 'auto';
+      audio.volume = 0.7;
+      completionSoundRef.current = audio;
     }
   }, []);
 
@@ -553,7 +556,21 @@ export default function ProfessionalTypingLab() {
       setGameState('lesson-complete');
       // Play completion sound
       setTimeout(() => {
-        completionSoundRef.current?.play().catch(() => {});
+        if (completionSoundRef.current) {
+          try {
+            completionSoundRef.current.currentTime = 0;
+            const playPromise = completionSoundRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => console.log('✓ Completion sound played'))
+                .catch(err => {
+                  console.warn('Audio autoplay blocked by browser:', err);
+                });
+            }
+          } catch (err) {
+            console.error('Error playing sound:', err);
+          }
+        }
       }, 300);
     }
   };
@@ -609,7 +626,7 @@ export default function ProfessionalTypingLab() {
     hasSubmittedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
 
-    audioRef.current?.play();
+    // Beep sound removed - completion sound plays at lesson end instead
 
     const timeElapsed = (Date.now() - startTimeRef.current) / 1000;
     const finalWpm = Math.round((correctCharsRef.current / 5) / (timeElapsed / 60));
