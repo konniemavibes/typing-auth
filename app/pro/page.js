@@ -176,10 +176,10 @@ export default function LeaderboardPage() {
           <>
             {/* Top 3 Winners Podium */}
             {filteredScores.length >= 1 && (
-              <div className="grid grid-cols-3 gap-4 mb-12">
+              <div className="grid grid-cols-3 gap-4 mb-12 items-end">
                 {/* Second Place */}
                 {filteredScores.length >= 2 && (
-                  <div className="order-1 pt-10">
+                  <div className="order-1">
                     <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-t-2xl p-6 border-2 border-slate-600/50 text-center transform transition-all hover:translate-y-1 hover:border-emerald-500/50">
                       <div className="flex justify-center">
                         <div className="relative">
@@ -265,7 +265,7 @@ export default function LeaderboardPage() {
 
                 {/* Third Place */}
                 {filteredScores.length >= 3 && (
-                  <div className="order-2 pt-14">
+                  <div className="order-2">
                     <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 rounded-t-2xl p-5 border-2 border-amber-700/50 text-center transform transition-all hover:translate-y-1 hover:border-emerald-500/50">
                       <div className="flex justify-center">
                         <div className="relative">
