@@ -2,8 +2,9 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-export default function ErrorPage() {
+function ErrorPageContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
@@ -76,3 +77,22 @@ export default function ErrorPage() {
     </div>
   );
 }
+
+export default function ErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white dark:bg-slate-800/90 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-2xl p-8">
+            <div className="h-12 bg-gray-200 dark:bg-slate-700 rounded-lg mx-auto mb-4 w-12"></div>
+            <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded mb-4"></div>
+            <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4 mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <ErrorPageContent />
+    </Suspense>
+  );
+}
+
