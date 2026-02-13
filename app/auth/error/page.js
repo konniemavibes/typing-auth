@@ -11,6 +11,8 @@ function ErrorPageContent() {
 
   const getErrorMessage = () => {
     switch (error) {
+      case 'CredentialsSignin':
+        return 'Invalid email or password. Please check and try again.';
       case 'Callback':
         return 'There was a problem with the OAuth provider. Please try again.';
       case 'OAuthSignin':
@@ -19,8 +21,8 @@ function ErrorPageContent() {
         return 'OAuth callback error. Please try again.';
       case 'EmailSigninEmail':
         return 'Could not send sign in email. Please try again.';
-      case 'Callback':
-        return 'Callback error. Please try again.';
+      case 'AccessDenied':
+        return 'Access denied. Please try again.';
       default:
         return 'Authentication failed. Please check your credentials and try again.';
     }
@@ -50,27 +52,32 @@ function ErrorPageContent() {
               </p>
             )}
 
-            <div className="flex gap-3">
+            {error && (
+              <p className="text-xs text-gray-500 dark:text-slate-500 mb-4 font-mono bg-gray-100 dark:bg-slate-700/50 p-2 rounded">
+                Error: {error}
+              </p>
+            )}
+
+            <div className="flex gap-3 flex-col">
               <Link
                 href="/auth/login"
-                className="flex-1 py-2 px-4 rounded-lg font-medium text-slate-900 bg-emerald-500 hover:bg-emerald-600 transition-colors"
+                className="py-2 px-4 rounded-lg font-medium text-slate-900 bg-emerald-500 hover:bg-emerald-600 transition-colors"
               >
                 Try Again
               </Link>
               <Link
                 href="/auth/signup"
-                className="flex-1 py-2 px-4 rounded-lg font-medium text-slate-100 bg-slate-700 hover:bg-slate-600 transition-colors"
+                className="py-2 px-4 rounded-lg font-medium text-slate-100 bg-slate-700 hover:bg-slate-600 transition-colors"
               >
-                Sign Up
+                Create Account
+              </Link>
+              <Link
+                href="/"
+                className="py-2 px-4 rounded-lg font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+              >
+                Back to Home
               </Link>
             </div>
-
-            <Link
-              href="/"
-              className="block mt-4 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 text-sm font-medium transition-colors"
-            >
-              Back to Home
-            </Link>
           </div>
         </div>
       </div>
