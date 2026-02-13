@@ -8,7 +8,12 @@ export function Providers({ children }) {
   return (
     <ThemeProvider>
       <NotificationProvider>
-        <SessionProvider>
+        <SessionProvider 
+          refetchInterval={5 * 60}
+          refetchOnWindowFocus={false}
+          refetchOnMount={true}
+          baseUrl={process.env.NEXT_PUBLIC_NEXTAUTH_URL || process.env.NEXTAUTH_URL}
+        >
           {children}
         </SessionProvider>
       </NotificationProvider>
