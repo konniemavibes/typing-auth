@@ -79,12 +79,13 @@ export default function LoginContent() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
             <div>
-              <label className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
+              <label htmlFor="email" className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
                 Email Address
               </label>
               <div className="relative">
                 <EnvelopeIcon className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 dark:text-slate-500" />
                 <input
+                  id="email"
                   type="email"
                   name="email"
                   value={formData.email}
@@ -98,12 +99,13 @@ export default function LoginContent() {
 
             {/* Password Field */}
             <div>
-              <label className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
+              <label htmlFor="password" className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
                 Password
               </label>
               <div className="relative">
                 <LockClosedIcon className="absolute left-3 top-3.5 w-5 h-5 text-gray-400 dark:text-slate-500" />
                 <input
+                  id="password"
                   type="password"
                   name="password"
                   value={formData.password}
