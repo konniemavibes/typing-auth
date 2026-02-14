@@ -2,7 +2,6 @@
 const nextConfig = {
   // Optimize images
   images: {
-    optimization: true,
     formats: ['image/webp', 'image/avif'],
   },
   
@@ -11,9 +10,6 @@ const nextConfig = {
   
   // Optimize for production
   productionBrowserSourceMaps: false,
-  
-  // Enable SWR
-  staticPageGenerationTimeout: 60,
   
   // Optimize redirects
   redirects: async () => {
