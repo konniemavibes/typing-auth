@@ -14,6 +14,7 @@ import { sentences } from "../constants/sentences";
 import { MobileKeyboard } from './MobileKeyboard';
 import NavBar from './Navbar';
 import { useTheme } from '../context/ThemeContext';
+import TypingResultsModal from './TypingResultsModal';
 
 // Animation themes for typing area
 const animationThemes = {};
@@ -455,14 +456,10 @@ export default function ProfessionalTypingLab() {
 
         {/* Sign In Prompt for Non-Authenticated Users */}
         {(!session || status === 'unauthenticated') && (
-          <div className={`mb-6 ${theme === 'dark' ? 'bg-yellow-900/20 border-yellow-500/30' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-4`}>
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <UserPlusIcon className={`w-6 h-6 ${theme === 'dark' ? 'text-yellow-500' : 'text-yellow-600'}`} />
-                <div>
-                  <p className={`${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'} font-medium`}>Please sign in to save your scores</p>
-                </div>
-              </div>
+          <div className={`mb-4 ${theme === 'dark' ? 'bg-yellow-900/20 border-yellow-500/30' : 'bg-yellow-50 border-yellow-200'} border rounded px-3 py-2 text-sm`}>
+            <div className="flex items-center gap-2">
+              <UserPlusIcon className={`w-4 h-4 flex-shrink-0 ${theme === 'dark' ? 'text-yellow-500' : 'text-yellow-600'}`} />
+              <p className={`${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Sign in to save your scores</p>
             </div>
           </div>
         )}
@@ -688,69 +685,14 @@ export default function ProfessionalTypingLab() {
         )}
 
         {gameState === "results" && (
-          <div className="animate-slide-up max-w-4xl mx-auto">
-            <div className={`${theme === 'dark' ? 'bg-slate-800/90' : 'bg-white/90'} backdrop-blur-lg rounded-xl p-8 md:p-10 border ${theme === 'dark' ? 'border-slate-700/30' : 'border-slate-300'} shadow-xl`}>
-              <div className="text-center mb-10">
-                <h2 className={`text-3xl ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'} mb-3`}>
-                  {session ? session.user.name : 'Your'} Results
-                </h2>
-                <p className={`text-lg ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                  {session ? 'Score saved to leaderboard!' : 'Great job! Sign in to save your score.'}
-                </p>
-              </div>
-
-              {/* Sign In Prompt in Results */}
-              {showSignInPrompt && !session && (
-                <div className={`mb-8 ${theme === 'dark' ? 'bg-yellow-900/20 border-yellow-500/30' : 'bg-yellow-50 border-yellow-200'} border rounded-lg p-6`}>
-                  <div className="text-center">
-                    <UserPlusIcon className={`w-12 h-12 ${theme === 'dark' ? 'text-yellow-500' : 'text-yellow-600'} mx-auto mb-3`} />
-                    <h3 className={`text-xl font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'} mb-2`}>
-                      Please Sign In
-                    </h3>
-                    <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
-                      Your score will be saved when you sign in to your account.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-6 mb-10 max-w-2xl mx-auto">
-                <StatPanel
-                  value={stats.wpm}
-                  label="Words Per Minute"
-                  icon={<BoltIcon className="w-7 h-7" />}
-                  color="text-emerald-500"
-                  theme={theme}
-                />
-                <StatPanel
-                  value={stats.accuracy}
-                  label="Accuracy Rate"
-                  icon={<ChartBarIcon className="w-7 h-7" />}
-                  color="text-emerald-500"
-                  unit="%"
-                  theme={theme}
-                />
-              </div>
-
-              {submitError && (
-                <div className={`mb-6 p-4 ${theme === 'dark' ? 'bg-rose-900/20 border-rose-500/30' : 'bg-rose-50 border-rose-200'} border rounded-lg`}>
-                  <p className={`${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'} text-center`}>{submitError}</p>
-                </div>
-              )}
-
-              <div className="flex justify-center gap-6">
-                <ActionButton
-                  onClick={startGame}
-                  icon={<ArrowPathIcon className="w-5 h-5" />}
-                  variant="primary"
-                  className="text-lg px-8 py-4"
-                >
-                  Try Again
-                  <span className="ml-2 px-2 py-0.5 bg-emerald-600 rounded text-xs">Ctrl+Space</span>
-                </ActionButton>
-              </div>
-            </div>
-          </div>
+          <TypingResultsModal
+            isOpen={true}
+            stats={stats}
+            session={session}
+            onRestart={startGame}
+            onClose={() => setGameState('idle')}
+            theme={theme}
+          />
         )}
       </div>
     </div>
