@@ -21,6 +21,7 @@ import {
   MoonIcon,
   BoltIcon,
   Bars3Icon,
+  AcademicCapIcon,
 } from '@heroicons/react/24/outline';
 
 export default function DashboardContent() {
@@ -28,6 +29,38 @@ export default function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, toggleTheme, mounted } = useTheme();
+  const tabActiveRef = useRef(true);
+
+  // Prevent teachers from accessing student dashboard
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'teacher') {
+      // Teachers should go to teacher dashboard
+      router.push('/teacher-dashboard');
+    }
+  }, [status, session, router]);
+
+  // Track tab visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      tabActiveRef.current = !document.hidden;
+      
+      // Send tab activity to server
+      if (session?.user?.id) {
+        fetch('/api/student/activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: session.user.id,
+            isActive: !document.hidden,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(err => console.error('Activity tracking error:', err));
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [session]);
   const [userData, setUserData] = useState(null);
   const [scores, setScores] = useState([]);
   const [stats, setStats] = useState({
@@ -44,12 +77,22 @@ export default function DashboardContent() {
   const [settingsForm, setSettingsForm] = useState({
     username: '',
     gender: '',
+    classId: '',
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [selectedClass, setSelectedClass] = useState('ey-jupiter');
+  const [savingClass, setSavingClass] = useState(false);
   const fileInputRef = useRef(null);
+
+  const CLASSES = [
+    { id: 'ey-jupiter', name: 'EY Jupiter' },
+    { id: 'ey-venus', name: 'EY Venus' },
+    { id: 'ey-mercury', name: 'EY Mercury' },
+    { id: 'ey-neptune', name: 'EY Neptune' },
+  ];
 
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
@@ -144,10 +187,40 @@ export default function DashboardContent() {
         if (userResponse.data) {
           setUserData(userResponse.data);
           setProfileImage(userResponse.data.image);
+          
+          // Map database class names back to UI format
+          const classMap = {
+            'EY jupiter': 'ey-jupiter',
+            'EY venus': 'ey-venus',
+            'EY mercury': 'ey-mercury',
+            'EY neptune': 'ey-neptune',
+          };
+          
           setSettingsForm({
             username: userResponse.data.username || '',
             gender: userResponse.data.gender || '',
+            classId: classMap[userResponse.data.classId] || 'ey-jupiter',
           });
+        }
+
+        // Fetch student profile to get current class
+        try {
+          const profileRes = await fetch('/api/student/profile');
+          if (profileRes.ok) {
+            const profileData = await profileRes.json();
+            if (profileData.classId) {
+              // Map database class names back to IDs
+              const classMap = {
+                'EY jupiter': 'ey-jupiter',
+                'EY venus': 'ey-venus',
+                'EY mercury': 'ey-mercury',
+                'EY neptune': 'ey-neptune',
+              };
+              setSelectedClass(classMap[profileData.classId] || 'ey-jupiter');
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching profile:', err);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -185,6 +258,14 @@ export default function DashboardContent() {
     setMessage({ type: '', text: '' });
     
     try {
+      // Convert UI format classId to DB format
+      const classNameMap = {
+        'ey-jupiter': 'EY jupiter',
+        'ey-venus': 'EY venus',
+        'ey-mercury': 'EY mercury',
+        'ey-neptune': 'EY neptune',
+      };
+
       const res = await fetch('/api/user', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -192,6 +273,7 @@ export default function DashboardContent() {
           username: settingsForm.username,
           gender: settingsForm.gender,
           image: profileImage,
+          classId: classNameMap[settingsForm.classId] || settingsForm.classId,
         }),
       });
       
@@ -208,6 +290,43 @@ export default function DashboardContent() {
       setMessage({ type: 'error', text: 'Failed to save settings' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveClass = async () => {
+    setSavingClass(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const classNameMap = {
+        'ey-jupiter': 'EY jupiter',
+        'ey-venus': 'EY venus',
+        'ey-mercury': 'EY mercury',
+        'ey-neptune': 'EY neptune',
+      };
+
+      const response = await fetch('/api/student/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          classId: classNameMap[selectedClass],
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update class');
+
+      const currentClassName = CLASSES.find((c) => c.id === selectedClass)?.name;
+      setMessage({
+        type: 'success',
+        text: `✅ Successfully assigned to ${currentClassName}!`,
+      });
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: `❌ Error: ${error.message}`,
+      });
+    } finally {
+      setSavingClass(false);
     }
   };
 
@@ -323,6 +442,20 @@ export default function DashboardContent() {
                   <option value="female">Female</option>
                   <option value="other">Other</option>
                   <option value="prefer-not-to-say">Prefer not to say</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Class</label>
+                <select
+                  value={settingsForm.classId}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, classId: e.target.value })}
+                  className={`w-full px-4 py-2 rounded-lg border transition ${isDark ? 'bg-slate-700 border-slate-600 text-slate-100 focus:border-emerald-500' : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-emerald-500'} focus:outline-none focus:ring-2 focus:ring-emerald-500/20`}
+                >
+                  <option value="ey-jupiter">EY Jupiter</option>
+                  <option value="ey-venus">EY Venus</option>
+                  <option value="ey-mercury">EY Mercury</option>
+                  <option value="ey-neptune">EY Neptune</option>
                 </select>
               </div>
 
@@ -461,6 +594,68 @@ export default function DashboardContent() {
               Leaderboard
             </button>
           </Link>
+        </div>
+
+        {/* Class Selection Card */}
+        <div className={`backdrop-blur-md border rounded-lg p-6 mb-8 ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-gray-200 shadow-sm'}`}>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <AcademicCapIcon className={`w-6 h-6 ${isDark ? 'text-blue-400' : 'text-blue-500'}`} />
+              <h3 className={`text-lg font-semibold ${isDark ? 'text-slate-100' : 'text-gray-900'}`}>
+                Class Assignment
+              </h3>
+            </div>
+          </div>
+
+          <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+            Select your class so your teacher can monitor your progress
+          </p>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {CLASSES.map((cls) => (
+              <button
+                key={cls.id}
+                onClick={() => setSelectedClass(cls.id)}
+                className={`p-3 rounded-lg border-2 transition font-medium text-sm ${
+                  selectedClass === cls.id
+                    ? isDark
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                      : 'border-blue-500 bg-blue-50 text-blue-700'
+                    : isDark
+                    ? 'border-slate-700 bg-slate-700/50 text-slate-400 hover:border-blue-500/50'
+                    : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-blue-300'
+                }`}
+              >
+                {cls.name}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleSaveClass}
+            disabled={savingClass}
+            className={`w-full px-6 py-2 rounded-lg font-medium transition ${
+              isDark
+                ? 'bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white'
+                : 'bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white'
+            }`}
+          >
+            {savingClass ? 'Saving...' : 'Save Class Assignment'}
+          </button>
+
+          {message.text && (
+            <div className={`mt-3 p-2 rounded text-sm ${
+              message.type === 'success'
+                ? isDark
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'bg-emerald-50 text-emerald-700'
+                : isDark
+                ? 'bg-red-500/20 text-red-400'
+                : 'bg-red-50 text-red-700'
+            }`}>
+              {message.text}
+            </div>
+          )}
         </div>
 
         {/* Advanced Stats Section */}

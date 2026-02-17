@@ -18,8 +18,15 @@ export default function SignupPage() {
     password: '',
     confirmPassword: '',
     gender: 'male',
+    classId: 'EY jupiter',
   });
   const [error, setError] = useState('');
+  const classes = [
+    { id: 'EY jupiter', name: 'EY Jupiter' },
+    { id: 'EY venus', name: 'EY Venus' },
+    { id: 'EY mercury', name: 'EY Mercury' },
+    { id: 'EY neptune', name: 'EY Neptune' },
+  ];
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -60,6 +67,7 @@ export default function SignupPage() {
           email: formData.email,
           password: formData.password,
           gender: formData.gender,
+          classId: formData.classId,
         }),
       });
 
@@ -183,6 +191,26 @@ export default function SignupPage() {
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
+              </select>
+            </div>
+
+            {/* Class Selection Field */}
+            <div>
+              <label className="block text-gray-900 dark:text-slate-200 text-sm font-medium mb-2">
+                Select Your Class
+              </label>
+              <select
+                name="classId"
+                value={formData.classId}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-700/50 border border-gray-300 dark:border-slate-600 rounded-xl text-gray-900 dark:text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+              >
+                {classes.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </option>
+                ))}
               </select>
             </div>
 

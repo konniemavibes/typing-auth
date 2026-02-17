@@ -22,6 +22,7 @@ export async function GET(request) {
         email: true,
         gender: true,
         image: true,
+        classId: true,
         createdAt: true,
       },
     });
@@ -47,13 +48,14 @@ export async function PATCH(request) {
     }
 
     const body = await request.json();
-    const { username, gender, image } = body;
+    const { username, gender, image, classId } = body;
 
     // Build update object with only provided fields
     const updateData = {};
     if (username !== undefined) updateData.username = username;
     if (gender !== undefined) updateData.gender = gender;
     if (image !== undefined) updateData.image = image;
+    if (classId !== undefined) updateData.classId = classId;
 
     const user = await prisma.user.update({
       where: { email: session.user.email },
@@ -64,6 +66,7 @@ export async function PATCH(request) {
         email: true,
         gender: true,
         image: true,
+        classId: true,
       },
     });
 

@@ -1,4 +1,7 @@
 import { Suspense } from 'react';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import DashboardContent from './DashboardContent';
 
 function DashboardSkeleton() {
@@ -9,7 +12,19 @@ function DashboardSkeleton() {
   );
 }
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const session = await getServerSession(authOptions);
+
+  // Redirect to login if not authenticated
+  if (!session) {
+    redirect("/auth/login");
+  }
+
+  // Prevent teachers from accessing student dashboard
+  if (session.user.role === "teacher") {
+    redirect("/teacher-dashboard");
+  }
+
   return (
     <Suspense fallback={<DashboardSkeleton />}>
       <DashboardContent />

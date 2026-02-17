@@ -322,6 +322,9 @@ export default function DashboardSidebar({ isDark, onClose, isOpen }) {
               
               {showUserMenu && (
                 <div ref={userMenuRef} className={`mt-2 rounded-lg shadow-lg border p-2 z-20 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-gray-200"}`}>
+                  <Link href="/student" onClick={() => { setShowUserMenu(false); onClose(); }} className={`block px-3 py-2 rounded text-sm transition ${isDark ? "text-slate-300 hover:bg-slate-700" : "text-gray-700 hover:bg-gray-100"}`}>
+                    My Profile
+                  </Link>
                   <Link href="/dashboard" onClick={() => { setShowUserMenu(false); onClose(); }} className={`block px-3 py-2 rounded text-sm transition ${isDark ? "text-slate-300 hover:bg-slate-700" : "text-gray-700 hover:bg-gray-100"}`}>
                     Dashboard
                   </Link>

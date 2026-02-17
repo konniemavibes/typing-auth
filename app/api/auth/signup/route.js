@@ -4,10 +4,13 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
   try {
-    let { username, email, password, gender } = await request.json();
+    let { username, email, password, gender, classId } = await request.json();
 
     // Normalize email: trim whitespace and convert to lowercase
     email = email.trim().toLowerCase();
+
+    // Valid classes
+    const validClasses = ['EY jupiter', 'EY venus', 'EY mercury', 'EY neptune'];
 
     // Validate input
     if (!username || !email || !password || !gender) {
@@ -20,6 +23,13 @@ export async function POST(request) {
     if (!['male', 'female'].includes(gender)) {
       return NextResponse.json(
         { error: 'Gender must be male or female' },
+        { status: 400 }
+      );
+    }
+
+    if (!classId || !validClasses.includes(classId)) {
+      return NextResponse.json(
+        { error: `Invalid class. Must be one of: ${validClasses.join(', ')}` },
         { status: 400 }
       );
     }
@@ -44,13 +54,15 @@ export async function POST(request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user - default role is 'student'
     const user = await prisma.user.create({
       data: {
         username,
         email,
         password: hashedPassword,
         gender,
+        classId, // Save the selected class
+        role: 'student', // Default to student
       },
     });
 
@@ -62,8 +74,11 @@ export async function POST(request) {
       user: userWithoutPassword 
     });
   } catch (error) {
+    console.error('Signup error:', error);
+    console.error('Error message:', error.message);
+    console.error('Error details:', error);
     return NextResponse.json(
-      { error: 'Failed to create account' },
+      { error: error.message || 'Failed to create account' },
       { status: 500 }
     );
   }
