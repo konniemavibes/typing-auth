@@ -5,18 +5,6 @@ import { NextResponse } from 'next/server';
 
 export async function PUT(request, { params }) {
   try {
-    // In Next.js 14+, params may be a Promise
-    const resolvedParams = await Promise.resolve(params);
-    const { id } = resolvedParams;
-
-    if (!id) {
-      console.error('❌ [ADMIN_API] No ID provided for PUT');
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -35,8 +23,9 @@ export async function PUT(request, { params }) {
       );
     }
 
-    console.log('✅ [ADMIN_API] Admin user updating user role for ID:', id);
+    console.log('✅ [ADMIN_API] Admin user updating user role');
 
+    const { id } = params;
     const { role } = await request.json();
 
     if (!['student', 'teacher', 'admin'].includes(role)) {
@@ -73,18 +62,6 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    // In Next.js 14+, params may be a Promise
-    const resolvedParams = await Promise.resolve(params);
-    const { id } = resolvedParams;
-
-    if (!id) {
-      console.error('❌ [ADMIN_API] No ID provided for DELETE');
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
     const session = await getServerSession(authOptions);
 
     if (!session) {
@@ -104,6 +81,8 @@ export async function DELETE(request, { params }) {
         { status: 403 }
       );
     }
+
+    const { id } = params;
 
     console.log('✅ [ADMIN_API] Admin user deleting user:', id);
 
