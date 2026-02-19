@@ -93,19 +93,21 @@ export async function GET(req, { params }) {
         let isActive = false;
         let lastActivity = null;
         
-        // Try Redis first
+        // Try Redis first (fastest)
         try {
           const redis = getRedis();
-          const activityKey = `student:activity:${student.id}`;
-          const activityData = await redis.get(activityKey);
-          
-          if (activityData) {
-            const activity = JSON.parse(activityData);
-            isActive = activity.isActive === true;
-            lastActivity = activity.timestamp || activity.updatedAt;
+          if (redis && redis.status === 'ready') {
+            const activityKey = `student:activity:${student.id}`;
+            const activityData = await redis.get(activityKey);
+            
+            if (activityData) {
+              const activity = JSON.parse(activityData);
+              isActive = activity.isActive === true;
+              lastActivity = activity.timestamp || activity.updatedAt;
+            }
           }
         } catch (redisError) {
-          // Redis failed, continue to database check
+          // Redis error - continue to database check silently
         }
 
         // If no Redis data, check database

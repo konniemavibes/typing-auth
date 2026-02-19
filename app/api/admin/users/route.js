@@ -7,12 +7,29 @@ export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session) {
+      console.error('❌ [ADMIN_API] No session found');
       return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
+        { error: 'Unauthorized - No session found' },
+        { status: 401 }
+      );
+    }
+
+    console.log('🔐 [ADMIN_API] Session user:', {
+      id: session.user?.id,
+      email: session.user?.email,
+      role: session.user?.role,
+    });
+
+    if (session.user.role !== 'admin') {
+      console.error('❌ [ADMIN_API] User is not admin. Role:', session.user.role);
+      return NextResponse.json(
+        { error: `Unauthorized - Admin access required (Current role: ${session.user.role})` },
         { status: 403 }
       );
     }
+
+    console.log('✅ [ADMIN_API] Admin user accessing users list');
 
     const users = await prisma.user.findMany({
       select: {
@@ -36,9 +53,9 @@ export async function GET(request) {
 
     return NextResponse.json({ users, stats });
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('❌ [ADMIN_API] Error fetching users:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch users' },
+      { error: `Failed to fetch users: ${error.message}` },
       { status: 500 }
     );
   }

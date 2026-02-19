@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "cleanup:activity": "node cleanup-activity.js",
+    "cleanup:activity:14": "node cleanup-activity.js 14",
+    "cleanup:activity:dry": "node cleanup-activity.js 7 true",
+    "cleanup:activity:dry:14": "node cleanup-activity.js 14 true"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^3.5.0",

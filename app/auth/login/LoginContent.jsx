@@ -55,8 +55,18 @@ export default function LoginContent() {
         return;
       }
 
-      // Redirect to dashboard on success
-      router.push('/dashboard');
+      // Get the session to check user role
+      const sessionResponse = await fetch('/api/auth/session');
+      const session = await sessionResponse.json();
+
+      // Redirect based on role
+      if (session?.user?.role === 'admin') {
+        router.push('/admin-dashboard');
+      } else if (session?.user?.role === 'teacher') {
+        router.push('/teacher-dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);

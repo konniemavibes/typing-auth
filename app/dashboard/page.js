@@ -20,11 +20,16 @@ export default async function Dashboard() {
     redirect("/auth/login");
   }
 
-  // Prevent teachers from accessing student dashboard
+  // Redirect based on role
+  if (session.user.role === "admin") {
+    redirect("/admin-dashboard");
+  }
+
   if (session.user.role === "teacher") {
     redirect("/teacher-dashboard");
   }
 
+  // Only students see the student dashboard
   return (
     <Suspense fallback={<DashboardSkeleton />}>
       <DashboardContent />

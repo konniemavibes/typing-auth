@@ -14,6 +14,8 @@ import {
   TrashIcon,
   AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
+import ConfirmDeleteModal from '@/app/components/ConfirmDeleteModal';
+import SuccessModal from '@/app/components/SuccessModal';
 
 export default function AdminDashboardContent() {
   const { data: session, status } = useSession();
@@ -24,6 +26,9 @@ export default function AdminDashboardContent() {
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, userId: null, isLoading: false });
+  const [successModal, setSuccessModal] = useState({ isOpen: false, title: '', message: '' });
+  const [errorMessage, setErrorMessage] = useState('');
   const [stats, setStats] = useState({
     totalUsers: 0,
     students: 0,
@@ -65,14 +70,27 @@ export default function AdminDashboardContent() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      setErrorMessage('');
       const response = await fetch('/api/admin/users');
-      if (!response.ok) throw new Error('Failed to fetch users');
+      
+      if (!response.ok) {
+        let errorMsg = 'Failed to fetch users';
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (e) {
+          errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMsg);
+      }
 
       const data = await response.json();
       setUsers(data.users || []);
       setStats(data.stats || {});
     } catch (error) {
       console.error('Error fetching users:', error);
+      setErrorMessage(error.message || 'Failed to fetch users');
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -94,30 +112,78 @@ export default function AdminDashboardContent() {
         body: JSON.stringify({ role: newRole }),
       });
 
-      if (!response.ok) throw new Error('Failed to update user');
+      let errorMsg = 'Failed to update user';
+      
+      if (!response.ok) {
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (e) {
+          errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMsg);
+      }
 
       setEditingUser(null);
       await fetchUsers();
-      alert('User role updated successfully');
+      setSuccessModal({
+        isOpen: true,
+        title: 'Success',
+        message: 'User role updated successfully'
+      });
     } catch (error) {
-      alert('Error: ' + error.message);
+      console.error('Update role error:', error);
+      setSuccessModal({
+        isOpen: true,
+        title: 'Error Updating Role',
+        message: error.message || 'Failed to update user'
+      });
     }
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!confirm('Are you sure? This action cannot be undone.')) return;
+    // Open the confirmation modal
+    setDeleteConfirm({ isOpen: true, userId, isLoading: false });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm.userId) return;
 
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      setDeleteConfirm(prev => ({ ...prev, isLoading: true }));
+      
+      const response = await fetch(`/api/admin/users/${deleteConfirm.userId}`, {
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('Failed to delete user');
+      let errorMsg = 'Failed to delete user';
+      
+      if (!response.ok) {
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (e) {
+          errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMsg);
+      }
 
+      setDeleteConfirm({ isOpen: false, userId: null, isLoading: false });
       await fetchUsers();
-      alert('User deleted successfully');
+      
+      setSuccessModal({
+        isOpen: true,
+        title: 'User Deleted',
+        message: 'User has been successfully deleted from the system'
+      });
     } catch (error) {
-      alert('Error: ' + error.message);
+      console.error('Delete error:', error);
+      setDeleteConfirm({ isOpen: false, userId: null, isLoading: false });
+      setSuccessModal({
+        isOpen: true,
+        title: 'Error Deleting User',
+        message: error.message || 'Failed to delete user'
+      });
     }
   };
 
@@ -254,6 +320,22 @@ export default function AdminDashboardContent() {
             </div>
           </div>
 
+          {errorMessage && (
+            <div className="px-6 py-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
+              <div className="flex justify-between items-center">
+                <p className="text-red-800 dark:text-red-300 font-medium">
+                  ⚠️ {errorMessage}
+                </p>
+                <button
+                  onClick={() => setErrorMessage('')}
+                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 font-medium text-sm"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
@@ -376,6 +458,25 @@ export default function AdminDashboardContent() {
           )}
         </div>
       </main>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, userId: null, isLoading: false })}
+        onConfirm={confirmDelete}
+        title="Delete User"
+        message="Are you sure you want to delete this user? This action cannot be undone and all associated data will be removed."
+        isLoading={deleteConfirm.isLoading}
+      />
+
+      {/* Success/Error Modal */}
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal({ isOpen: false, title: '', message: '' })}
+        title={successModal.title}
+        message={successModal.message}
+        buttonText="OK"
+      />
     </div>
   );
 }

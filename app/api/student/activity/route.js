@@ -30,27 +30,33 @@ export async function POST(req) {
       // Continue even if database fails - try Redis as backup
     }
 
-    // Also try to cache in Redis for faster real-time access
+    // Also try to cache in Redis for faster real-time access (optional)
+    // If Redis is down, the database is still saving the data - that's fine
     try {
       const redis = getRedis();
-      const activityKey = `student:activity:${session.user.id}`;
-      const activityData = {
-        userId: session.user.id,
-        isActive,
-        timestamp: timestamp || new Date().toISOString(),
-        updatedAt: Date.now(),
-      };
+      if (redis) {
+        const activityKey = `student:activity:${session.user.id}`;
+        const activityData = {
+          userId: session.user.id,
+          isActive,
+          timestamp: timestamp || new Date().toISOString(),
+          updatedAt: Date.now(),
+        };
 
-      await redis.setex(
-        activityKey,
-        60,
-        JSON.stringify(activityData)
-      );
+        // Try to set with a timeout - don't wait too long
+        const setPromise = redis.setex(
+          activityKey,
+          60,
+          JSON.stringify(activityData)
+        );
+
+        // Don't await - fire and forget to prevent blocking
+        setPromise.catch(() => {
+          // Silently ignore Redis errors - database has already saved the data
+        });
+      }
     } catch (redisError) {
-      // Fallback: Redis failed, but database succeeded
-      console.warn(
-        `Redis unavailable: ${redisError.message}. Using database fallback.`
-      );
+      // Redis not available - that's OK, database has it
     }
 
     console.log(`Activity tracked for user ${session.user.id}: isActive=${isActive}`);

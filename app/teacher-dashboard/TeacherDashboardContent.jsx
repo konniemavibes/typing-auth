@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -13,7 +13,14 @@ import {
   MoonIcon,
   EyeIcon,
   EyeSlashIcon,
+  BoltIcon,
+  ChartBarIcon,
+  ArrowPathIcon,
+  SparklesIcon,
+  ClockIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { sentences } from '../constants/sentences';
 
 const CLASSES = [
   { id: 'ey-jupiter', name: 'EY Jupiter' },
@@ -33,11 +40,35 @@ export default function TeacherDashboardContent() {
   const [mounted, setMounted] = useState(false);
   const [isTabActive, setIsTabActive] = useState(true);
   const [lastActivityTime, setLastActivityTime] = useState(new Date());
+  const [activeTab, setActiveTab] = useState('students'); // 'students' or 'typing'
   const [stats, setStats] = useState({
     totalStudents: 0,
     activeStudents: 0,
     completedTests: 0,
   });
+  
+  // Typing test states
+  const [typingStats, setTypingStats] = useState({
+    wpm: 0,
+    accuracy: 100,
+    testsDone: 0,
+    avgWpm: 0,
+    bestWpm: 0,
+    bestAccuracy: 100,
+  });
+  const [currentSentence, setCurrentSentence] = useState('');
+  const [userInput, setUserInput] = useState('');
+  const [testActive, setTestActive] = useState(false);
+  const [testResults, setTestResults] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [timerActive, setTimerActive] = useState(false);
+  
+  // Refs for typing test
+  const timerRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const totalCharsTypedRef = useRef(0);
+  const correctCharsRef = useRef(0);
+  const inputRef = useRef(null);
 
   // Initialize dark mode from localStorage
   useEffect(() => {
@@ -143,12 +174,220 @@ export default function TeacherDashboardContent() {
     }
   };
 
+  // Load teacher's typing stats from database
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadTeacherTypingStats();
+    }
+  }, [session?.user?.id]);
+
+  const loadTeacherTypingStats = async () => {
+    try {
+      const response = await fetch(`/api/scores?userId=${session.user.id}&userRole=teacher`);
+      
+      if (!response.ok) {
+        console.warn('Failed to load typing stats');
+        return;
+      }
+
+      const data = await response.json();
+      const scores = Array.isArray(data.scores) ? data.scores : [];
+      
+      if (scores.length === 0) {
+        // No scores yet, keep default stats
+        return;
+      }
+
+      // Calculate stats from scores
+      const bestWpm = Math.max(...scores.map(s => s.wpm || 0), 0);
+      const bestAccuracy = Math.max(...scores.map(s => s.accuracy || 0), 0);
+      const avgWpm = Math.round(scores.reduce((sum, s) => sum + (s.wpm || 0), 0) / scores.length);
+      const testsDone = scores.length;
+
+      setTypingStats({
+        wpm: scores[scores.length - 1]?.wpm || 0,
+        accuracy: scores[scores.length - 1]?.accuracy || 100,
+        testsDone,
+        avgWpm,
+        bestWpm,
+        bestAccuracy,
+      });
+    } catch (error) {
+      console.error('Error loading typing stats:', error);
+    }
+  };
+
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: '/' });
   };
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
+  };
+
+  // Typing test methods with real-time updates
+  const startTypingTest = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    
+    const randomSentence = sentences[Math.floor(Math.random() * sentences.length)];
+    setCurrentSentence(randomSentence);
+    setUserInput('');
+    setTestActive(true);
+    setTimerActive(false);
+    setTimeLeft(30);
+    setTestResults(null);
+    
+    totalCharsTypedRef.current = 0;
+    correctCharsRef.current = 0;
+    startTimeRef.current = null;
+    
+    setTimeout(() => {
+      if (inputRef.current) inputRef.current.focus();
+    }, 0);
+  };
+
+  const startTimer = () => {
+    if (!timerActive) {
+      setTimerActive(true);
+      startTimeRef.current = Date.now();
+      
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            endTypingTest();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+  };
+
+  const endTypingTest = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimerActive(false);
+    setTestActive(false);
+
+    const timeElapsed = startTimeRef.current 
+      ? (Date.now() - startTimeRef.current) / 1000 
+      : 0;
+    const timeInMinutes = Math.max(timeElapsed / 60, 0.016);
+    
+    // Get the actual current input length (not stale state)
+    // Use the ref value which is accurate, fallback to state if needed
+    const actualCharsTyped = userInput.length || totalCharsTypedRef.current;
+    
+    // Calculate WPM (5 characters = 1 word)
+    const wpm = Math.round((correctCharsRef.current / 5) / timeInMinutes);
+    const accuracy = totalCharsTypedRef.current > 0
+      ? Math.round((correctCharsRef.current / totalCharsTypedRef.current) * 100)
+      : 100;
+
+    const result = {
+      wpm: Math.max(0, wpm),
+      accuracy: Math.min(100, accuracy),
+      charsTyped: actualCharsTyped,
+      sentenceLength: currentSentence.length,
+    };
+
+    setTestResults(result);
+
+    // Save test to database
+    if (session?.user?.id) {
+      fetch('/api/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: session.user.id,
+          wpm: result.wpm,
+          accuracy: result.accuracy,
+          userRole: 'teacher',
+        }),
+      }).catch(err => console.error('Error saving test:', err));
+    }
+
+    // Update teacher stats
+    setTypingStats(prev => {
+      const newTestsDone = prev.testsDone + 1;
+      const newAvgWpm = Math.round((prev.avgWpm * prev.testsDone + result.wpm) / newTestsDone);
+      const newBestWpm = Math.max(prev.bestWpm, result.wpm);
+      const newBestAccuracy = Math.max(prev.bestAccuracy, result.accuracy);
+      
+      return {
+        ...prev,
+        wpm: result.wpm,
+        accuracy: result.accuracy,
+        testsDone: newTestsDone,
+        avgWpm: newAvgWpm,
+        bestWpm: newBestWpm,
+        bestAccuracy: newBestAccuracy,
+      };
+    });
+  };
+
+  const handleTypeInput = (e) => {
+    const newInput = e.target.value;
+    
+    if (!timerActive && newInput.length > 0) {
+      startTimer();
+    }
+
+    // Calculate changes
+    const addedChars = newInput.length - userInput.length;
+    if (addedChars > 0) {
+      totalCharsTypedRef.current += addedChars; // Count all keys pressed for WPM
+      for (let i = userInput.length; i < newInput.length; i++) {
+        if (newInput[i] === currentSentence[i]) {
+          correctCharsRef.current++;
+        }
+      }
+    } else if (addedChars < 0) {
+      // When deleting, subtract from correct count but keep total for WPM calculation
+      for (let i = newInput.length; i < userInput.length; i++) {
+        if (userInput[i] === currentSentence[i]) {
+          correctCharsRef.current--;
+        }
+      }
+    }
+
+    setUserInput(newInput);
+
+    // Update WPM in real-time
+    if (startTimeRef.current) {
+      const timeElapsed = (Date.now() - startTimeRef.current) / 1000;
+      const timeInMinutes = Math.max(timeElapsed / 60, 0.016);
+      const netWpm = Math.round((correctCharsRef.current / 5) / timeInMinutes);
+      const accuracy = totalCharsTypedRef.current > 0
+        ? Math.round((correctCharsRef.current / totalCharsTypedRef.current) * 100)
+        : 100;
+      
+      setTypingStats(prev => ({
+        ...prev,
+        wpm: netWpm,
+        accuracy: accuracy,
+      }));
+    }
+
+    // Auto-end test when user types the entire sentence
+    if (newInput.length >= currentSentence.length && testActive) {
+      endTypingTest();
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === ' ' && testActive) {
+      e.preventDefault();
+      const newInput = userInput + ' ';
+      setUserInput(newInput);
+      
+      // Process the space character
+      if (!timerActive) startTimer();
+      totalCharsTypedRef.current += 1;
+      if (' ' === currentSentence[userInput.length]) {
+        correctCharsRef.current++;
+      }
+    }
   };
 
   if (status === 'loading') {
@@ -219,6 +458,35 @@ export default function TeacherDashboardContent() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tab Switcher */}
+        <div className="mb-8 flex gap-4">
+          <button
+            onClick={() => setActiveTab('students')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'students'
+                ? 'bg-emerald-500 text-white shadow-lg'
+                : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:border-emerald-300'
+            }`}
+          >
+            <UserGroupIcon className="w-5 h-5" />
+            Student Management
+          </button>
+          <button
+            onClick={() => setActiveTab('typing')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'typing'
+                ? 'bg-emerald-500 text-white shadow-lg'
+                : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:border-emerald-300'
+            }`}
+          >
+            <BoltIcon className="w-5 h-5" />
+            Try Typing Test
+          </button>
+        </div>
+
+        {/* Student Management Tab */}
+        {activeTab === 'students' && (
+          <>
         {/* Class Selector */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -453,7 +721,256 @@ export default function TeacherDashboardContent() {
             </div>
           </div>
         </div>
+        </>
+        )}
+
+        {/* Typing Test Tab */}
+        {activeTab === 'typing' && (
+          <div>
+            {/* Teacher Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-slate-400 mb-1">Best WPM</p>
+                    <p className="text-3xl font-bold text-emerald-600">{typingStats.bestWpm}</p>
+                  </div>
+                  <BoltIcon className="w-12 h-12 text-emerald-500 opacity-20" />
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-slate-400 mb-1">Best Accuracy</p>
+                    <p className="text-3xl font-bold text-blue-600">{typingStats.bestAccuracy}%</p>
+                  </div>
+                  <CheckCircleIcon className="w-12 h-12 text-blue-500 opacity-20" />
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-slate-400 mb-1">Average WPM</p>
+                    <p className="text-3xl font-bold text-purple-600">{typingStats.avgWpm}</p>
+                  </div>
+                  <ChartBarIcon className="w-12 h-12 text-purple-500 opacity-20" />
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-slate-400 mb-1">Tests Completed</p>
+                    <p className="text-3xl font-bold text-pink-600">{typingStats.testsDone}</p>
+                  </div>
+                  <SparklesIcon className="w-12 h-12 text-pink-500 opacity-20" />
+                </div>
+              </div>
+            </div>
+
+            {/* Typing Test Area */}
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  ⌨️ Typing Test
+                </h3>
+              </div>
+
+              <div className="p-8">
+                {/* Timer Display */}
+                {testActive && (
+                  <div className="mb-6 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-500/10 dark:to-blue-500/10 p-6 rounded-lg border border-emerald-200 dark:border-emerald-500/30">
+                    <div className="flex items-center gap-6">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mb-1 font-semibold">Time Left</p>
+                        <p className={`text-3xl font-bold font-mono ${
+                          timeLeft <= 5 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-emerald-600 dark:text-emerald-400'
+                        }`}>
+                          {timeLeft}s
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mb-1 font-semibold">Live WPM</p>
+                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{typingStats.wpm}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mb-1 font-semibold">Accuracy</p>
+                        <p className={`text-3xl font-bold ${
+                          typingStats.accuracy >= 95 ? 'text-emerald-600 dark:text-emerald-400' : 'text-yellow-600 dark:text-yellow-400'
+                        }`}>
+                          {typingStats.accuracy}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sentence to Type - Full Screen Display */}
+                {currentSentence && (
+                  <div className="relative">
+                    {/* Hidden Input for capturing keystrokes */}
+                    {testActive && (
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={userInput}
+                        onChange={handleTypeInput}
+                        onKeyDown={handleKeyDown}
+                        className="sr-only"
+                        autoFocus
+                      />
+                    )}
+                    
+                    <div 
+                      className={`relative rounded-lg p-12 border-2 font-mono transition-all duration-300 cursor-text focus:outline-none min-h-96 flex flex-col justify-center ${
+                        testActive
+                          ? 'bg-white dark:bg-slate-900 border-emerald-500'
+                          : 'bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-slate-700'
+                      }`}
+                      tabIndex={testActive ? 0 : -1}
+                      onClick={() => {
+                        if (testActive && inputRef.current) {
+                          inputRef.current.focus();
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (testActive && inputRef.current) {
+                          inputRef.current.focus();
+                        }
+                      }}
+                    >
+                      {/* Sentence Display with Visible Spaces */}
+                      <div className="text-3xl lg:text-4xl leading-relaxed text-gray-900 dark:text-white break-words">
+                        {currentSentence.split('').map((char, idx) => (
+                          <span
+                            key={idx}
+                            className={`transition-all duration-75 inline-block ${
+                              char === ' '
+                                ? idx < userInput.length
+                                  ? userInput[idx] === ' '
+                                    ? 'w-4 h-8 mx-1 border-b-4 border-dashed border-emerald-500 dark:border-emerald-400' // Space typed correctly
+                                    : 'w-4 h-8 mx-1 border-b-4 border-dashed border-red-500 dark:border-red-400 bg-red-100 dark:bg-red-900/30' // Space typed wrong
+                                  : idx === userInput.length
+                                  ? 'w-4 h-8 mx-1 border-b-4 border-dashed border-emerald-500 dark:border-emerald-400 animate-pulse' // Current space to type
+                                  : 'w-4 h-8 mx-1 border-b-2 border-dashed border-gray-400 dark:border-slate-500' // Untouched space
+                                : ''
+                            } ${
+                              char !== ' ' && (
+                                idx < userInput.length
+                                  ? userInput[idx] === char
+                                    ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30'
+                                    : 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30'
+                                  : idx === userInput.length
+                                  ? 'text-white dark:text-slate-200 bg-emerald-500 dark:bg-emerald-600 rounded animate-pulse'
+                                  : 'text-gray-400 dark:text-slate-500'
+                              )
+                            }`}
+                          >
+                            {char === ' ' ? '' : char}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mt-8 pt-6 border-t border-gray-200 dark:border-slate-700">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-sm font-medium text-gray-600 dark:text-slate-400">Progress</span>
+                          <span className="text-sm text-gray-600 dark:text-slate-400 font-mono text-lg font-bold">
+                            {userInput.length} / {currentSentence.length}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-4 overflow-hidden shadow-lg">
+                          <div
+                            className="bg-gradient-to-r from-emerald-500 to-blue-500 h-4 rounded-full transition-all duration-150 shadow-lg"
+                            style={{ width: `${(userInput.length / currentSentence.length) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-gray-500 dark:text-slate-400 mt-6 text-center">
+                        💡 Click to focus • Type directly • Use backspace to delete • Complete the sentence to finish
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Test Results */}
+                {testResults ? (
+                  <div className="mb-8 p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                    <h4 className="text-lg font-semibold text-emerald-900 dark:text-emerald-300 mb-4 flex items-center gap-2">
+                      <CheckCircleIcon className="w-6 h-6" />
+                      Test Complete!
+                    </h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm text-emerald-800 dark:text-emerald-300 mb-1">Words Per Minute</p>
+                        <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{testResults.wpm}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-800 dark:text-emerald-300 mb-1">Accuracy</p>
+                        <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{testResults.accuracy}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-emerald-800 dark:text-emerald-300 mb-1">Characters Typed</p>
+                        <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                          {testResults.charsTyped}/{testResults.sentenceLength}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (!testActive && !testResults) ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 dark:text-slate-400 mb-6 text-lg">
+                      Ready to test your typing skills? Start a new test to see how fast you can type!
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Buttons */}
+                <div className="flex gap-4 justify-center">
+                  {!testActive && !testResults ? (
+                    <button
+                      onClick={startTypingTest}
+                      className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-colors"
+                    >
+                      <BoltIcon className="w-5 h-5" />
+                      Start Test
+                    </button>
+                  ) : testActive ? (
+                    <button
+                      onClick={endTypingTest}
+                      className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
+                    >
+                      <XMarkIcon className="w-5 h-5" />
+                      End Test
+                    </button>
+                  ) : null}
+
+                  {testResults && (
+                    <button
+                      onClick={() => startTypingTest()}
+                      className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-colors"
+                    >
+                      <ArrowPathIcon className="w-5 h-5" />
+                      Try Again
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Info Box for Typing Test */}
+            <div className="mt-8 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-lg p-4">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
+                💡 <strong>Teacher Tip:</strong> Taking typing tests alongside your students helps you understand the experience they go through. It also sets a great example! Your stats are saved so you can track your own progress over time.
+              </p>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 }
+
