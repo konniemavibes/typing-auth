@@ -11,6 +11,13 @@ const nextConfig = {
   // Optimize for production
   productionBrowserSourceMaps: false,
   
+  // Logging for debugging
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+  
   // Optimize redirects
   redirects: async () => {
     return [];
